@@ -1,0 +1,87 @@
+/* ── Design Tokens ───────────────────────────────────────────────────────── */
+:root {
+  /* Base palette */
+  --bg-base: #07071a;
+  --bg-surface: #0e0e1e;
+  --bg-elevated: #16162e;
+
+  /* Text */
+  --text-primary: #f0f0fa;
+  --text-secondary: #9999c0;
+  --text-muted: #55557a;
+
+  /* Accent colors */
+  --accent-blue: #5b8af5;
+  --accent-purple: #7c6af5;
+  --accent-green: #7ecb8b;
+  --accent-orange: #f5a94a;
+  --accent-pink: #f56b8a;
+
+  /* Fonts */
+  --font-sans: var(--font-outfit), 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Background gradient ─────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 10%, rgba(91, 138, 245, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 15%, rgba(124, 106, 245, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 35% at 50% 90%, rgba(126, 203, 139, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Focus styles ────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ── Selection ───────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(91, 138, 245, 0.35);
+  color: var(--text-primary);
+}

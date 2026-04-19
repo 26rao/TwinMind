@@ -1,0 +1,76 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 1.25rem;
+  background: rgba(8, 8, 20, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.metrics {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.metricLabel {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.metricValue {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+}
+
+.metricGood {
+  color: var(--accent-green);
+}
+
+.metricAvg {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.summarizingPill {
+  font-size: 0.65rem;
+  color: var(--accent-orange);
+  background: rgba(245, 169, 74, 0.1);
+  border: 1px solid rgba(245, 169, 74, 0.2);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  animation: breathe 1.5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}

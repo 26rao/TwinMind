@@ -1,0 +1,304 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(12, 12, 24, 0.55);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.icon { font-size: 1.1rem; flex-shrink: 0; }
+
+.title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.batchCount {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+
+.loadingPill {
+  font-size: 0.68rem;
+  color: var(--accent-purple);
+  background: rgba(124, 106, 245, 0.12);
+  border: 1px solid rgba(124, 106, 245, 0.28);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+  animation: breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.refreshBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.spinIcon {
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error ───────────────────────────────────────────────────────────── */
+.errorBanner {
+  margin: 0.625rem 1.25rem;
+  padding: 0.6rem 0.875rem;
+  background: rgba(239, 68, 68, 0.09);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+/* ── Scroll area ─────────────────────────────────────────────────────── */
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.09) transparent;
+}
+
+/* ── Batch containers ────────────────────────────────────────────────── */
+.batch {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: batchEnter 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes batchEnter {
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.batchLatest {
+  border-color: rgba(91, 138, 245, 0.2);
+  box-shadow: 0 0 0 1px rgba(91, 138, 245, 0.08), 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.batchOld {
+  border-color: rgba(255, 255, 255, 0.05);
+  opacity: 0.85;
+}
+
+/* ── Batch header ────────────────────────────────────────────────────── */
+.batchHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.875rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: none;
+  width: 100%;
+  cursor: default;
+  text-align: left;
+  font-family: inherit;
+}
+
+.batchOld .batchHeader {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.batchOld .batchHeader:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.batchHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/* Latest batch badge */
+.latestBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.latestDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Older batch badge */
+.oldBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+}
+
+.batchTime {
+  font-size: 0.63rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  opacity: 0.7;
+}
+
+.batchLatency {
+  font-size: 0.62rem;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  opacity: 0.8;
+}
+
+.chevron {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+/* ── Card grid ───────────────────────────────────────────────────────── */
+.cardGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  /* Cards are flush inside the batch container */
+}
+
+.cardGrid > * + * {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.emptyState {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  padding: 2rem 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  margin-bottom: 0.4rem;
+  opacity: 0.45;
+}
+
+.emptyHint {
+  font-size: 0.76rem;
+  opacity: 0.6;
+}
+
+/* ── Skeletons ───────────────────────────────────────────────────────── */
+.skeletonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton {
+  height: 82px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Loading overlay on top of existing batches */
+.loadingOverlay {
+  background: rgba(7, 7, 26, 0.5);
+  border-radius: 12px;
+  padding: 0.5rem;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(91, 138, 245, 0.15);
+}
