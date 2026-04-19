@@ -3,8 +3,8 @@
 A premium, always-on AI meeting copilot built with **Next.js**, powered by **Groq's LPU infrastructure** for ultra-low latency transcription and suggestions.
 
 ## Live Demo
+🚀 https://twin-mind-three.vercel.app/
 
-> Deploy URL goes here
 
 ## Stack
 
@@ -21,8 +21,8 @@ A premium, always-on AI meeting copilot built with **Next.js**, powered by **Gro
 
 ```bash
 # 1. Clone and install
-git clone <your-repo>
-cd twinmind
+git clone https://github.com/26rao/TwinMind
+cd TwinMind
 npm install
 
 # 2. Run dev server
@@ -33,6 +33,7 @@ npm run dev
 ```
 
 You can get a free Groq API key at [console.groq.com](https://console.groq.com).
+
 
 ## Architecture
 
