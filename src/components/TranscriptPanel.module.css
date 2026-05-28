@@ -135,6 +135,66 @@
   color: var(--accent-blue);
 }
 
+.factCheckActive {
+  background: rgba(126, 203, 139, 0.15);
+  border-color: rgba(126, 203, 139, 0.4);
+  color: #7ecb8b;
+  box-shadow: 0 0 10px rgba(126, 203, 139, 0.15);
+}
+
+.factCheckRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.factBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: help;
+}
+
+.factBadge:hover {
+  transform: scale(1.02);
+}
+
+.verified {
+  background: rgba(126, 203, 139, 0.12);
+  color: #7ecb8b;
+  border-color: rgba(126, 203, 139, 0.25);
+}
+
+.uncertain {
+  background: rgba(245, 169, 74, 0.12);
+  color: #f5a94a;
+  border-color: rgba(245, 169, 74, 0.25);
+}
+
+.incorrect {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.statusIcon {
+  font-size: 0.75rem;
+}
+
+.claimText {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Demo area */
 .demoArea {
   display: flex;

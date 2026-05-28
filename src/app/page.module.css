@@ -54,7 +54,33 @@
 .topActions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
+}
+
+.exportGroup {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  padding: 0.15rem;
+  gap: 0.15rem;
+}
+
+.exportGroup .actionBtn {
+  background: transparent;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+
+.exportGroup .actionBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.btnIcon {
+  font-size: 0.85rem;
 }
 
 .actionBtn {

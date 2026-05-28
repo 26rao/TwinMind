@@ -119,7 +119,7 @@ export function useChat(): UseChatReturn {
         setIsStreaming(false);
       }
     },
-    [settings, messages, appendAssistantToken, setAssistantLatency]
+    [settings, messages, appendAssistantToken, setAssistantLatency, getMessageContent, setMessagesAndRef]
   );
 
   const expandSuggestion = useCallback(
@@ -189,7 +189,7 @@ export function useChat(): UseChatReturn {
         setIsStreaming(false);
       }
     },
-    [settings, appendAssistantToken, setAssistantLatency]
+    [settings, appendAssistantToken, setAssistantLatency, getMessageContent, setMessagesAndRef]
   );
 
   const clearChat = useCallback(() => {

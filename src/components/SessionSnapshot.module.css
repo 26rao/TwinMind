@@ -1,0 +1,234 @@
+.banner {
+  background: linear-gradient(
+    135deg,
+    rgba(91, 138, 245, 0.08) 0%,
+    rgba(124, 106, 245, 0.04) 100%
+  );
+  border: 1px solid rgba(91, 138, 245, 0.15);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.info {
+  flex: 1;
+  min-width: 300px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+  background: rgba(91, 138, 245, 0.15);
+  border: 1px solid rgba(91, 138, 245, 0.3);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+}
+
+.client {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.quickInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.infoItem {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.value {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.btn {
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-family: inherit;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btnPrimary {
+  background: rgba(91, 138, 245, 0.2);
+  border: 1px solid rgba(91, 138, 245, 0.3);
+  color: var(--accent-blue);
+}
+
+.btnPrimary:hover {
+  background: rgba(91, 138, 245, 0.3);
+  border-color: rgba(91, 138, 245, 0.5);
+}
+
+.btnSecondary {
+  background: rgba(124, 106, 245, 0.15);
+  border: 1px solid rgba(124, 106, 245, 0.25);
+  color: var(--accent-purple);
+  position: relative;
+}
+
+.btnSecondary:hover {
+  background: rgba(124, 106, 245, 0.25);
+  border-color: rgba(124, 106, 245, 0.4);
+}
+
+.btnGhost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.continuationMenu {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  background: rgba(12, 12, 24, 0.95);
+  border: 1px solid rgba(124, 106, 245, 0.2);
+  border-radius: 8px;
+  min-width: 280px;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  display: none;
+}
+
+.continuationMenu:hover .dropdownMenu,
+.continuationMenu:focus-within .dropdownMenu {
+  display: flex;
+  flex-direction: column;
+}
+
+.menuItem {
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.menuItem:last-child {
+  border-bottom: none;
+}
+
+.menuItem:hover {
+  background: rgba(91, 138, 245, 0.1);
+  color: var(--accent-blue);
+  padding-left: 1.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .continuationMenu {
+    width: 100%;
+  }
+
+  .dropdownMenu {
+    position: static;
+    display: none;
+    margin-top: 0.5rem;
+  }
+
+  .continuationMenu:hover .dropdownMenu,
+  .continuationMenu:focus-within .dropdownMenu {
+    display: flex;
+  }
+}

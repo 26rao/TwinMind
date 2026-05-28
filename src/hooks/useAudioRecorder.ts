@@ -19,6 +19,7 @@ interface UseAudioRecorderReturn {
   error: string | null;
   isTranscribing: boolean;
   pendingChunks: number;          // How many chunks are being transcribed
+  updateSegment: (id: string, updates: Partial<TranscriptSegment>) => void;
 }
 
 export function useAudioRecorder(): UseAudioRecorderReturn {
@@ -32,7 +33,6 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const chunkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chunkIndexRef = useRef(0);
@@ -166,6 +166,10 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     setRecordingDurationSec(0);
   }, []);
 
+  const updateSegment = useCallback((id: string, updates: Partial<TranscriptSegment>) => {
+    setSegments((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -186,5 +190,6 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     error,
     isTranscribing,
     pendingChunks,
+    updateSegment,
   };
 }

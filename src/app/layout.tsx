@@ -16,12 +16,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TwinMind – Live Meeting Copilot',
+  title: 'ConvoIQ – Live Meeting Copilot',
   description:
     'An always-on AI meeting copilot that listens to your conversations and surfaces real-time suggestions, fact-checks, and talking points powered by Groq.',
   keywords: ['AI meeting assistant', 'live transcription', 'meeting copilot', 'Groq', 'Whisper'],
   openGraph: {
-    title: 'TwinMind – Live Meeting Copilot',
+    title: 'ConvoIQ – Live Meeting Copilot',
     description: 'Real-time suggestions and transcription for your meetings.',
     type: 'website',
   },

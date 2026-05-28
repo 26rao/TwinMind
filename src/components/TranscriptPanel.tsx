@@ -17,6 +17,8 @@ interface Props {
   onRefresh: () => void;
   onAddDemo: (text: string) => void;
   error: string | null;
+  factCheckMode: boolean;
+  onToggleFactCheck: () => void;
 }
 
 export function TranscriptPanel({
@@ -30,6 +32,8 @@ export function TranscriptPanel({
   onRefresh,
   onAddDemo,
   error,
+  factCheckMode,
+  onToggleFactCheck,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [demoText, setDemoText] = useState('');
@@ -101,6 +105,15 @@ export function TranscriptPanel({
             disabled={segments.length === 0}
           >
             ↻
+          </button>
+          <button
+            id="fact-check-toggle-btn"
+            className={`${styles.iconBtn} ${factCheckMode ? styles.factCheckActive : ''}`}
+            onClick={onToggleFactCheck}
+            title="Toggle Live Fact-Check Mode"
+            aria-label="Toggle Fact-Check Mode"
+          >
+            🛡️
           </button>
           <button
             id="demo-mode-btn"
@@ -182,6 +195,19 @@ export function TranscriptPanel({
               <span className={styles.time}>{formatTimestamp(seg.timestamp)}</span>
             </div>
             <p className={styles.text}>{seg.text}</p>
+            
+            {seg.factChecks && seg.factChecks.length > 0 && (
+              <div className={styles.factCheckRow}>
+                {seg.factChecks.map((fc, i) => (
+                  <div key={i} className={`${styles.factBadge} ${styles[fc.status]}`} title={fc.explanation}>
+                    <span className={styles.statusIcon}>
+                      {fc.status === 'verified' ? '✅' : fc.status === 'uncertain' ? '⚠️' : '❌'}
+                    </span>
+                    <span className={styles.claimText}>{fc.claim}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
 

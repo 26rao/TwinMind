@@ -34,7 +34,7 @@ export const DEFAULT_SETTINGS: SessionSettings = {
   // 4. JSON response format: zero parse failures, enables per-type badge.
   // 5. Context = summary (older history) + raw recent chunks (relevance).
   // ------------------------------------------------------------------
-  suggestionPrompt: `You are TwinMind — a world-class real-time meeting copilot. Analyze the conversation and surface exactly 3 high-value suggestions.
+  suggestionPrompt: `You are ConvoIQ — a world-class real-time meeting copilot. Analyze the conversation and surface exactly 3 high-value suggestions.
 
 <context>
   <prior_summary>{summary}</prior_summary>
@@ -105,7 +105,7 @@ Return ONLY the summary text. No labels, no preamble, no trailing notes.`,
   //    - clarification → define terms, resolve ambiguity, propose standard
   // 4. STRUCTURE: lead with the single most valuable insight, then expand.
   // ------------------------------------------------------------------
-  detailedAnswerPrompt: `You are TwinMind — a world-class expert analyst with deep knowledge across business, technology, science, law, finance, and any domain that arises in conversation.
+  detailedAnswerPrompt: `You are ConvoIQ — a world-class expert analyst with deep knowledge across business, technology, science, law, finance, and any domain that arises in conversation.
 
 <context>
   <suggestion_type>{type}</suggestion_type>
@@ -145,7 +145,7 @@ TYPE-SPECIFIC LENSES:
   //    the context is organized (summary vs. recent) so it knows which
   //    part is more reliable and how to weight them.
   // ------------------------------------------------------------------
-  chatSystemPrompt: `You are TwinMind — an expert AI copilot who has been listening to this entire conversation. You have deep, practitioner-level expertise across business, technology, finance, science, law, and any other domain.
+  chatSystemPrompt: `You are ConvoIQ — an expert AI copilot who has been listening to this entire conversation. You have deep, practitioner-level expertise across business, technology, finance, science, law, and any other domain.
 
 <context_structure>
   The system message includes two context layers:
@@ -174,26 +174,142 @@ TYPE-SPECIFIC LENSES:
   recentChunksForSuggestions: 3,
 
   // ------------------------------------------------------------------
+  // FACT-CHECK PROMPT
+  // Analyzes a segment and extracts claims to verify.
+  // ------------------------------------------------------------------
+  factCheckPrompt: `You are a precision fact-checker. Analyze the transcript segment and identify key factual claims (numbers, dates, scientific facts, business metrics, names).
+  
+  For each claim:
+  1. Determine status: "verified" (known true), "uncertain" (needs check), or "incorrect" (known false).
+  2. Provide a 1-sentence expert explanation.
+  
+  Transcript Segment:
+  "{text}"
+  
+  Return ONLY a JSON object:
+  {
+    "factChecks": [
+      { "claim": "<claim text>", "status": "verified|uncertain|incorrect", "explanation": "<expert explanation>" }
+    ]
+  }
+  If no substantive claims exist, return an empty list.`,
+
+  // ------------------------------------------------------------------
+  // REPORT PROMPT (Structured Summary + Action Items)
+  // ------------------------------------------------------------------
+  reportPrompt: `You are a world-class executive assistant. Generate a comprehensive, structured meeting report from the transcript.
+  
+  <transcript>
+  {transcript}
+  </transcript>
+  
+  Analyze the full transcript and extract:
+  1. Key Points: The 5 most critical themes or topics.
+  2. Decisions Made: Specific agreements or conclusions reached.
+  3. Open Questions: Unresolved issues or questions asked but not answered.
+  4. Risks: Potential blockers, threats, or concerns mentioned.
+  5. Action Items: Tasks with clear owners and deadlines (if mentioned).
+  
+  Return ONLY a JSON object:
+  {
+    "keyPoints": ["..."],
+    "decisions": ["..."],
+    "openQuestions": ["..."],
+    "risks": ["..."],
+    "actionItems": [
+      { "task": "...", "owner": "...", "deadline": "..." }
+    ]
+  }
+  
+  Be precise. Use professional language. If no action items are found, return an empty list.`,
+
+  // ------------------------------------------------------------------
   // FOLLOW-UP QUESTIONS PROMPT
-  // After each substantive chat response, generate 3 smart follow-up
-  // questions the user is likely to want to ask next.
   // ------------------------------------------------------------------
   followUpQuestionsPrompt: `Given this AI assistant response in a meeting context, generate exactly 3 short, smart follow-up questions a meeting participant would genuinely want to ask next.
+  
+  Requirements:
+  - Questions must be specific and non-obvious (not "Can you elaborate?")
+  - Vary the angle: one drill-down, one counter-perspective or challenge, one action-oriented
+  - Each question should be answerable in 1–2 sentences (no open-ended rabbit holes)
+  - Keep each question under 12 words
+  
+  AI response:
+  {response}
+  
+  Meeting summary:
+  {summary}
+  
+  Return ONLY valid JSON. No markdown fences, no explanation.
+  { "questions": ["<question 1>", "<question 2>", "<question 3>"] }`,
 
-Requirements:
-- Questions must be specific and non-obvious (not "Can you elaborate?")
-- Vary the angle: one drill-down, one counter-perspective or challenge, one action-oriented
-- Each question should be answerable in 1–2 sentences (no open-ended rabbit holes)
-- Keep each question under 12 words
+  // ------------------------------------------------------------------
+  // SESSION SNAPSHOT PROMPT
+  // Used to generate structured session continuity data from a meeting
+  // ------------------------------------------------------------------
+  sessionSnapshotPrompt: `You are a meeting intelligence analyst. From the provided meeting data, extract structured session continuity information.
 
-AI response:
-{response}
-
-Meeting summary:
+Transcript Summary:
 {summary}
 
-Return ONLY valid JSON. No markdown fences, no explanation.
-{ "questions": ["<question 1>", "<question 2>", "<question 3>"] }`,
+Meeting Report:
+{report}
+
+Extract and return ONLY a JSON object with:
+1. pendingTasks: Array of unfinished tasks with owners and deadlines
+2. unresolvedDecisions: Array of decisions not yet finalized, with context
+3. risks: Array of identified risks or blockers
+4. discussionTopics: Array of main topics discussed with summaries and suggested next steps
+5. keyTakeaways: Array of 3-5 most important takeaways
+
+{
+  "pendingTasks": [
+    { "task": "...", "owner": "...", "deadline": "..." }
+  ],
+  "unresolvedDecisions": [
+    { "decision": "...", "context": "..." }
+  ],
+  "risks": ["..."],
+  "discussionTopics": [
+    { "topic": "...", "summary": "...", "suggestedNextSteps": ["..."] }
+  ],
+  "keyTakeaways": ["..."]
+}
+
+Be concise and specific. Only include items explicitly mentioned or clearly inferred from the meeting.`,
+
+  // ------------------------------------------------------------------
+  // CONTINUATION SUGGESTIONS PROMPT
+  // Generate smart questions to resume a conversation
+  // ------------------------------------------------------------------
+  continuationSuggestionsPrompt: `You are ConvoIQ's Smart Continuation Assistant. Generate exactly 3 continuation questions for resuming a meeting with the same client.
+
+Last Meeting Summary:
+{summary}
+
+Pending Items:
+- Tasks: {pendingTasks}
+- Unresolved: {unresolvedDecisions}
+- Risks: {risks}
+- Topics: {topics}
+
+Generate 3 specific, actionable continuation questions that:
+1. Reference unresolved decisions or pending tasks
+2. Show continuity from last time
+3. Are ready to ask at the start of this meeting
+4. Help the team pick up momentum without repeating old ground
+
+Vary question types:
+- One status update ("Have we...?")
+- One decision-forcing ("Should we...?")
+- One action-oriented ("Who will...?")
+
+Return ONLY valid JSON:
+{
+  "questions": ["<question 1>", "<question 2>", "<question 3>"]
+}
+
+Keep each question under 15 words and directly actionable.`,
 };
 
 export const GROQ_MODELS = {

@@ -1,4 +1,4 @@
-// Core domain types for TwinMind Live Suggestions
+// Core domain types for ConvoIQ Live Suggestions
 
 export type SuggestionType = 'question' | 'fact-check' | 'talking-point' | 'answer' | 'clarification';
 
@@ -18,12 +18,33 @@ export interface SuggestionBatch {
   latencyMs?: number;           // Time from refresh trigger to first suggestion rendered
 }
 
+export interface FactCheck {
+  claim: string;
+  status: 'verified' | 'uncertain' | 'incorrect';
+  explanation: string;
+}
+
 export interface TranscriptSegment {
   id: string;
   text: string;
   timestamp: number;
   isFinal: boolean;
   chunkIndex: number;   // Which 30s chunk this belongs to
+  factChecks?: FactCheck[];
+}
+
+export interface ActionItem {
+  task: string;
+  owner: string;
+  deadline: string;
+}
+
+export interface MeetingReport {
+  keyPoints: string[];
+  decisions: string[];
+  openQuestions: string[];
+  risks: string[];
+  actionItems: ActionItem[];
 }
 
 export interface ChatMessage {
@@ -55,6 +76,10 @@ export interface SessionSettings {
   autoRefreshInterval: number;      // seconds between auto-refreshes
   recentChunksForSuggestions: number; // how many recent chunks to use (raw) vs summary
   followUpQuestionsPrompt: string;  // prompt to generate follow-up questions after chat
+  factCheckPrompt: string;          // prompt to fact-check a transcript segment
+  reportPrompt: string;             // prompt to generate structured meeting report
+  sessionSnapshotPrompt: string;    // prompt to generate session snapshot from meeting
+  continuationSuggestionsPrompt: string; // prompt to generate continuation questions
 }
 
 export interface SessionExport {
@@ -69,4 +94,58 @@ export interface SessionExport {
     suggestions: Array<{ type: string; preview: string }>;
   }>;
   chatHistory: Array<{ role: string; content: string; timestamp: string; latencyMs?: number }>;
+}
+
+// ── Session Continuity Types ──────────────────────────────────────────
+
+export interface PendingTask {
+  task: string;
+  owner: string;
+  deadline?: string;
+}
+
+export interface UnresolvedDecision {
+  decision: string;
+  context: string;  // Why it matters
+}
+
+export interface DiscussionTopic {
+  topic: string;
+  summary: string;  // What was discussed
+  suggestedNextSteps?: string[];
+}
+
+export interface LastMeetingSnapshot {
+  clientId: string;
+  clientName: string;
+  date: string;
+  overallSummary: string;
+  pendingTasks: PendingTask[];
+  unresolvedDecisions: UnresolvedDecision[];
+  risks: string[];
+  discussionTopics: DiscussionTopic[];
+  keyTakeaways: string[];
+}
+
+export interface MeetingSession {
+  id: string;
+  clientId: string;
+  clientName: string;
+  date: string;
+  startTime: number;
+  endTime?: number;
+  summary: string;
+  transcript: string;
+  pendingTasks: PendingTask[];
+  unresolvedDecisions: UnresolvedDecision[];
+  risks: string[];
+  discussionTopics: DiscussionTopic[];
+  keyTakeaways: string[];
+}
+
+export interface SessionHistory {
+  clientId: string;
+  clientName: string;
+  meetings: MeetingSession[];
+  lastMeetingId?: string;
 }

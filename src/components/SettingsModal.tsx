@@ -11,24 +11,28 @@ interface Props {
   onClose: () => void;
 }
 
+// Outer component controls visibility; inner component owns state so it
+// re-initialises cleanly from `settings` every time the modal is opened.
 export function SettingsModal({ isOpen, onClose }: Props) {
+  if (!isOpen) return null;
+  return <SettingsModalContent onClose={onClose} />;
+}
+
+function SettingsModalContent({ onClose }: { onClose: () => void }) {
   const { settings, updateSettings, resetSettings } = useSettings();
+  // Draft is initialised from current settings when the modal mounts (i.e. when it opens).
+  // No useEffect sync needed because the inner component is unmounted/remounted on each open.
   const [draft, setDraft] = useState<SessionSettings>(settings);
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'prompts'>('general');
 
-  useEffect(() => {
-    if (isOpen) { setDraft(settings); setSaved(false); }
-  }, [isOpen, settings]);
-
+  // Keyboard shortcut — legitimate external-system subscription, not a state sync.
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    if (isOpen) window.addEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+  }, [onClose]);
 
   const handleSave = () => {
     updateSettings(draft);
@@ -232,7 +236,7 @@ export function SettingsModal({ isOpen, onClose }: Props) {
 
               <Section title="Chat System Prompt">
                 <p className={styles.hint}>
-                  Full transcript and summary are injected automatically. This sets the assistant's persona and behavior.
+                  Full transcript and summary are injected automatically. This sets the assistant&apos;s persona and behavior.
                 </p>
                 <textarea
                   id="settings-chat-prompt"

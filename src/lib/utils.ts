@@ -49,6 +49,46 @@ export function downloadJson(data: unknown, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
+export function exportToMarkdown(session: SessionExport): void {
+  const md = [
+    `# Meeting Report: ${new Date(session.exportedAt).toLocaleString()}`,
+    '',
+    `**Duration:** ${formatDuration(session.sessionDurationSeconds)}`,
+    '',
+    '## Rolling Summary',
+    session.rollingSummary || '_No summary generated._',
+    '',
+    '## Full Transcript',
+    ...session.transcript.map(t => `**[${formatTimestamp(new Date(t.timestamp).getTime())}]** Ch #${t.chunkIndex + 1}: ${t.text}`),
+    '',
+    '## Chat History',
+    ...session.chatHistory.map(m => `**${m.role.toUpperCase()}**: ${m.content}`),
+  ].join('\n');
+
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `convoiq-session-${new Date().toISOString().slice(0, 10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function exportToEmail(session: SessionExport): string {
+  const subject = encodeURIComponent(`Meeting Notes: ${new Date().toLocaleDateString()}`);
+  const body = encodeURIComponent([
+    'Meeting Summary:',
+    session.rollingSummary || 'N/A',
+    '',
+    'Key Transcript Excerpts:',
+    ...session.transcript.slice(-3).map(t => `- ${t.text}`),
+    '',
+    'Sent via ConvoIQ Live Copilot'
+  ].join('\n'));
+
+  return `mailto:?subject=${subject}&body=${body}`;
+}
+
 // ─── Misc Helpers ──────────────────────────────────────────────────────────────
 
 export function generateId(): string {

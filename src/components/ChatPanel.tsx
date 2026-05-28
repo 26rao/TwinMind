@@ -99,9 +99,9 @@ export function ChatPanel({ messages, isStreaming, error, onSendMessage }: Props
   return (
     <aside className={styles.panel}>
       <header className={styles.header}>
-        <span className={styles.icon}>💬</span>
-        <h2 className={styles.title}>Chat</h2>
-        {isStreaming && <span className={styles.streamingPill}>Responding…</span>}
+        <span className={styles.icon}>🔍</span>
+        <h2 className={styles.title}>Search Meeting</h2>
+        {isStreaming && <span className={styles.streamingPill}>Searching…</span>}
       </header>
 
       {error && (
@@ -138,7 +138,7 @@ export function ChatPanel({ messages, isStreaming, error, onSendMessage }: Props
             className={`${styles.message} ${msg.role === 'user' ? styles.userMsg : styles.assistantMsg}`}
           >
             <div className={styles.msgMeta}>
-              <span className={styles.msgRole}>{msg.role === 'user' ? 'You' : 'TwinMind'}</span>
+              <span className={styles.msgRole}>{msg.role === 'user' ? 'You' : 'ConvoIQ'}</span>
               <span className={styles.msgTime}>{formatTimestamp(msg.timestamp)}</span>
               {msg.latencyMs && (
                 <span className={styles.msgLatency} title="Time to first token">
@@ -191,7 +191,7 @@ export function ChatPanel({ messages, isStreaming, error, onSendMessage }: Props
             ref={inputRef}
             id="chat-input"
             className={styles.input}
-            placeholder="Ask anything about the conversation… (Enter to send, Shift+Enter for newline)"
+            placeholder="Ask anything from this meeting… (e.g. 'What did we decide about deployment?')"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

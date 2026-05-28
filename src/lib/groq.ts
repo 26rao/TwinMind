@@ -1,4 +1,4 @@
-import { Suggestion, ChatMessage } from '@/types';
+import { Suggestion, ChatMessage, FactCheck, MeetingReport } from '@/types';
 
 // ─── Transcription ────────────────────────────────────────────────────────────
 
@@ -318,4 +318,76 @@ export async function streamDetailedAnswer(
   }
 
   onDone(firstTokenMs ?? Date.now() - startMs);
+}
+
+// ─── Fact-Check ──────────────────────────────────────────────────────────────
+
+export async function factCheckSegment(
+  text: string,
+  prompt: string,
+  apiKey: string,
+  model: string
+): Promise<FactCheck[]> {
+  const filledPrompt = prompt.replace('{text}', text);
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: filledPrompt }],
+        temperature: 0.1, // low temperature for factual tasks
+        max_tokens: 512,
+        response_format: { type: 'json_object' },
+      }),
+    });
+
+    if (!response.ok) return [];
+    const data = await response.json();
+    const content = data.choices[0].message.content as string;
+    const parsed = JSON.parse(content) as { factChecks: FactCheck[] };
+    return parsed.factChecks || [];
+  } catch (err) {
+    console.error('Fact check failed:', err);
+    return [];
+  }
+}
+
+// ─── Meeting Report (Summary + Action Items) ────────────────────────────────
+
+export async function generateMeetingReport(
+  fullTranscript: string,
+  prompt: string,
+  apiKey: string,
+  model: string
+): Promise<MeetingReport> {
+  const filledPrompt = prompt.replace('{transcript}', fullTranscript);
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: filledPrompt }],
+      temperature: 0.3,
+      max_tokens: 2000,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Report generation failed (${response.status}): ${err}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content as string;
+  return JSON.parse(content) as MeetingReport;
 }

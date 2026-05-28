@@ -1,10 +1,10 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { SessionSettings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/lib/defaults';
 
-const STORAGE_KEY = 'twinmind_settings_v2'; // bumped version to clear stale keys
+const STORAGE_KEY = 'convoiq_settings_v1';
 
 interface SettingsContextValue {
   settings: SessionSettings;
@@ -15,19 +15,20 @@ interface SettingsContextValue {
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SessionSettings>(DEFAULT_SETTINGS);
-
-  // Hydrate from localStorage on mount, merging with defaults to handle new fields
-  useEffect(() => {
+  const [settings, setSettings] = useState<SessionSettings>(() => {
+    // Lazy initializer: read from localStorage synchronously at mount time
+    // (safe here because useState initializer only runs once, not on every render)
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<SessionSettings>;
-        // Deep merge: new fields from DEFAULT_SETTINGS are included
-        setSettings((prev) => ({ ...prev, ...parsed }));
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored) as Partial<SessionSettings>;
+          return { ...DEFAULT_SETTINGS, ...parsed };
+        }
       }
     } catch { /* ignore corrupt storage */ }
-  }, []);
+    return DEFAULT_SETTINGS;
+  });
 
   const updateSettings = (patch: Partial<SessionSettings>) => {
     setSettings((prev) => {
