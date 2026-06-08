@@ -40,13 +40,17 @@ export function exportSession(
 // ─── File Download ─────────────────────────────────────────────────────────────
 
 export function downloadJson(data: unknown, filename: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: 'application/json' }
+  );
   const a = document.createElement('a');
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 100);
 }
 
 export function exportToMarkdown(session: SessionExport): void {
@@ -65,13 +69,17 @@ export function exportToMarkdown(session: SessionExport): void {
     ...session.chatHistory.map(m => `**${m.role.toUpperCase()}**: ${m.content}`),
   ].join('\n');
 
-  const blob = new Blob([md], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
+  const blob = new Blob(
+    [md],
+    { type: 'text/markdown' }
+  );
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `convoiq-session-${new Date().toISOString().slice(0, 10)}.md`;
+  a.href = URL.createObjectURL(blob);
+  a.download = `meeting_report_${new Date().toISOString().slice(0, 10)}.md`;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 100);
 }
 
 export function exportToEmail(session: SessionExport): string {
@@ -87,6 +95,68 @@ export function exportToEmail(session: SessionExport): string {
   ].join('\n'));
 
   return `mailto:?subject=${subject}&body=${body}`;
+}
+
+export function exportToPDF(session: SessionExport): void {
+  const content = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>ConvoIQ Meeting Report</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111; padding: 40px; max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        h2 { font-size: 16px; font-weight: 700; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e5e7eb; }
+        .meta { font-size: 12px; color: #6b7280; margin-bottom: 24px; }
+        .summary { background: #f9fafb; border-left: 4px solid #7c3aed; padding: 14px 16px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.7; }
+        .segment { margin-bottom: 16px; }
+        .seg-meta { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+        .seg-text { font-size: 14px; line-height: 1.7; }
+        .chat-msg { margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; }
+        .chat-msg.user { background: #ede9fe; }
+        .chat-msg.assistant { background: #f0fdf4; }
+        .role { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; margin-bottom: 4px; }
+        @media print { body { padding: 20px; } }
+      </style>
+    </head>
+    <body>
+      <h1>ConvoIQ Meeting Report</h1>
+      <p class="meta">
+        Exported: ${new Date(session.exportedAt).toLocaleString()} &nbsp;|&nbsp;
+        Duration: ${formatDuration(session.sessionDurationSeconds)} &nbsp;|&nbsp;
+        ${session.transcript.length} segments
+      </p>
+
+      ${session.rollingSummary ? `<h2>Summary</h2><div class="summary">${session.rollingSummary}</div>` : ''}
+
+      <h2>Full Transcript</h2>
+      ${session.transcript.map(t => `
+        <div class="segment">
+          <div class="seg-meta">[${new Date(t.timestamp).toLocaleTimeString()}] Chunk #${t.chunkIndex + 1}</div>
+          <div class="seg-text">${t.text}</div>
+        </div>
+      `).join('')}
+
+      ${session.chatHistory.length > 0 ? `
+        <h2>AI Copilot Chat</h2>
+        ${session.chatHistory.map(m => `
+          <div class="chat-msg ${m.role}">
+            <div class="role">${m.role}</div>
+            <div>${m.content}</div>
+          </div>
+        `).join('')}
+      ` : ''}
+    </body>
+    </html>
+  `;
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.write(content);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
 }
 
 // ─── Misc Helpers ──────────────────────────────────────────────────────────────

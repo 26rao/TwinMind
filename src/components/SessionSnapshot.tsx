@@ -65,7 +65,7 @@ export function SessionSnapshot({
 
             {snapshot.risks.length > 0 && (
               <div className={styles.infoItem}>
-                <span className={styles.label}>⚠ Risks:</span>
+                <span className={styles.label}>Risks:</span>
                 <span className={styles.value}>{snapshot.risks.join(', ')}</span>
               </div>
             )}
@@ -109,7 +109,7 @@ export function SessionSnapshot({
           </div>
 
           <button className={styles.btn + ' ' + styles.btnGhost} onClick={onDismiss} title="Dismiss">
-            ✕ Dismiss
+            [Dismiss]
           </button>
         </div>
       </div>

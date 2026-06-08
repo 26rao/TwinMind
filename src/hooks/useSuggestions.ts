@@ -2,18 +2,34 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { SuggestionBatch, Suggestion, TranscriptSegment, LatencyMetrics } from '@/types';
-import { fetchSuggestions } from '@/lib/groq';
+import { fetchSuggestions, fetchAllTierSuggestions, SuggestionTier } from '@/lib/groq';
 import { generateId } from '@/lib/utils';
 import { useSettings } from '@/context/SettingsContext';
 
-interface UseSuggestionsReturn {
-  batches: SuggestionBatch[];
-  isLoading: boolean;
-  error: string | null;
-  latencyMetrics: Pick<LatencyMetrics, 'lastSuggestionLatencyMs' | 'avgSuggestionLatencyMs'>;
-  refresh: (segments: TranscriptSegment[], summary: string, recentChunksText: string) => Promise<void>;
-  clearBatches: () => void;
+interface TierBatches {
+  HIGH:     SuggestionBatch[];
+  MEDIUM:   SuggestionBatch[];
+  INSIGHTS: SuggestionBatch[];
 }
+
+interface TierLoading {
+  HIGH:     boolean;
+  MEDIUM:   boolean;
+  INSIGHTS: boolean;
+}
+
+interface UseSuggestionsReturn {
+  tierBatches:    TierBatches;
+  tierLoading:    TierLoading;
+  isLoading:      boolean;  // true if ANY tier is loading
+  error:          string | null;
+  latencyMetrics: Pick<LatencyMetrics, 'lastSuggestionLatencyMs' | 'avgSuggestionLatencyMs'>;
+  refresh:        (segments: TranscriptSegment[], summary: string, recentChunksText: string) => Promise<void>;
+  clearBatches:   () => void;
+}
+
+const EMPTY_TIER_BATCHES: TierBatches = { HIGH: [], MEDIUM: [], INSIGHTS: [] };
+const EMPTY_TIER_LOADING: TierLoading = { HIGH: false, MEDIUM: false, INSIGHTS: false };
 
 export function useSuggestions(
   segments: TranscriptSegment[],
@@ -22,12 +38,36 @@ export function useSuggestions(
   getRecentChunksText: (segs: TranscriptSegment[]) => string
 ): UseSuggestionsReturn {
   const { settings } = useSettings();
-  const [batches, setBatches] = useState<SuggestionBatch[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [tierBatches, setTierBatches] = useState<TierBatches>(EMPTY_TIER_BATCHES);
+  const [tierLoading, setTierLoading] = useState<TierLoading>(EMPTY_TIER_LOADING);
   const [error, setError] = useState<string | null>(null);
   const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
   const [allLatencies, setAllLatencies] = useState<number[]>([]);
+
+  // De-duplicate: skip if transcript hasn't changed
   const lastRefreshHashRef = useRef<string>('');
+  // Prevent concurrent refreshes
+  const refreshInFlightRef = useRef(false);
+
+  const makeBatch = useCallback(
+    (
+      rawSuggestions: Omit<Suggestion, 'id' | 'timestamp'>[],
+      recentText: string,
+      latencyMs: number
+    ): SuggestionBatch => ({
+      id: generateId(),
+      timestamp: Date.now(),
+      suggestions: rawSuggestions.slice(0, 3).map(s => ({
+        ...s,
+        id: generateId(),
+        timestamp: Date.now(),
+      })),
+      transcriptContext: recentText,
+      latencyMs,
+    }),
+    []
+  );
 
   const refresh = useCallback(
     async (currentSegments: TranscriptSegment[], currentSummary: string, recentText: string) => {
@@ -35,72 +75,97 @@ export function useSuggestions(
         setError('Groq API key not set — open ⚙ Settings.');
         return;
       }
-
       if (!recentText.trim()) {
         setError('No transcript yet. Start speaking or add demo text.');
         return;
       }
 
-      // De-duplicate: skip if context hasn't changed
+      // De-duplicate
       const hash = recentText.slice(-200);
       if (hash === lastRefreshHashRef.current) return;
+      if (refreshInFlightRef.current) return;
 
-      setIsLoading(true);
-      setError(null);
       lastRefreshHashRef.current = hash;
+      refreshInFlightRef.current = true;
+      setError(null);
+
+      // Mark all tiers loading
+      setTierLoading({ HIGH: true, MEDIUM: true, INSIGHTS: true });
+
+      const tiers: SuggestionTier[] = ['HIGH', 'MEDIUM', 'INSIGHTS'];
 
       try {
-        const { suggestions: rawSuggestions, latencyMs } = await fetchSuggestions(
-          recentText,
-          currentSummary,
-          settings.suggestionPrompt,
-          settings.groqApiKey,
-          settings.llmModel
+        // Fire all 3 API calls in parallel
+        const results = await Promise.allSettled(
+          tiers.map(tier =>
+            fetchSuggestions(
+              recentText, currentSummary,
+              settings.suggestionPrompt, settings.groqApiKey, settings.llmModel,
+              tier
+            ).then(res => ({ tier, res }))
+          )
         );
 
-        // Validate we always have exactly 3
-        const suggestions: Suggestion[] = rawSuggestions.slice(0, 3).map((s) => ({
-          ...s,
-          id: generateId(),
-          timestamp: Date.now(),
-        }));
+        let maxLatency = 0;
 
-        const batch: SuggestionBatch = {
-          id: generateId(),
-          timestamp: Date.now(),
-          suggestions,
-          transcriptContext: recentText,
-          latencyMs,
-        };
+        setTierBatches(prev => {
+          const next = { ...prev };
+          results.forEach((result, i) => {
+            const tier = tiers[i];
+            setTierLoading(l => ({ ...l, [tier]: false }));
+            if (result.status === 'fulfilled') {
+              const { res } = result.value;
+              maxLatency = Math.max(maxLatency, res.latencyMs);
+              const batch = makeBatch(res.suggestions, recentText, res.latencyMs);
+              next[tier] = [batch, ...prev[tier]];
+            } else {
+              console.error(`[${tier}] suggestion failed:`, result.reason);
+            }
+          });
+          return next;
+        });
 
-        // Newest batch goes to the TOP
-        setBatches((prev) => [batch, ...prev]);
-        setLastLatencyMs(latencyMs);
-        setAllLatencies((prev) => [...prev, latencyMs]);
+        if (maxLatency > 0) {
+          setLastLatencyMs(maxLatency);
+          setAllLatencies(prev => [...prev, maxLatency]);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate suggestions');
         lastRefreshHashRef.current = ''; // allow retry
+        setTierLoading(EMPTY_TIER_LOADING);
       } finally {
-        setIsLoading(false);
+        refreshInFlightRef.current = false;
+        setTierLoading(EMPTY_TIER_LOADING);
       }
     },
-    [settings]
+    [settings, makeBatch]
   );
 
-  // Auto-refresh every N seconds while recording
+  // ── Auto-refresh when a new segment arrives ──────────────────────────────────
+  const lastSegmentCountRef = useRef<number>(0);
+
   useEffect(() => {
     if (!isRecording) return;
+    if (segments.length === lastSegmentCountRef.current) return;
+    lastSegmentCountRef.current = segments.length;
 
+    const recentText = getRecentChunksText(segments);
+    refresh(segments, summary, recentText);
+  }, [segments, isRecording, summary, refresh, getRecentChunksText]);
+
+  // ── Fallback timer (catches long silences between transcriptions) ─────────────
+  useEffect(() => {
+    if (!isRecording) return;
     const timer = setInterval(() => {
       const recentText = getRecentChunksText(segments);
       refresh(segments, summary, recentText);
     }, settings.autoRefreshInterval * 1000);
-
     return () => clearInterval(timer);
   }, [isRecording, segments, summary, refresh, getRecentChunksText, settings.autoRefreshInterval]);
 
   const clearBatches = useCallback(() => {
-    setBatches([]);
+    setTierBatches(EMPTY_TIER_BATCHES);
+    setTierLoading(EMPTY_TIER_LOADING);
     setError(null);
     setLastLatencyMs(null);
     setAllLatencies([]);
@@ -111,8 +176,12 @@ export function useSuggestions(
     ? Math.round(allLatencies.reduce((a, b) => a + b, 0) / allLatencies.length)
     : null;
 
+  const isLoading = Object.values(tierLoading).some(Boolean);
+
+  // Legacy `batches` compat — expose the HIGH tier batches as default
   return {
-    batches,
+    tierBatches,
+    tierLoading,
     isLoading,
     error,
     latencyMetrics: {

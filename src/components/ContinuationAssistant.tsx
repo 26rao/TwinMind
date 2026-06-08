@@ -27,11 +27,11 @@ export function ContinuationAssistant({
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <header className={styles.header}>
           <div>
-            <h2 className={styles.title}>📖 Last Meeting Summary</h2>
+            <h2 className={styles.title}>Last Meeting Summary</h2>
             <p className={styles.subtitle}>{snapshot.clientName} • {snapshot.date}</p>
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            ✕
+            [Close]
           </button>
         </header>
 
@@ -59,14 +59,14 @@ export function ContinuationAssistant({
           {/* Pending Tasks */}
           {snapshot.pendingTasks.length > 0 && (
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>✅ Pending Tasks</h3>
+              <h3 className={styles.sectionTitle}>Pending Tasks</h3>
               <div className={styles.itemGrid}>
                 {snapshot.pendingTasks.map((task, idx) => (
                   <div key={idx} className={styles.taskCard}>
                     <div className={styles.taskText}>{task.task}</div>
                     <div className={styles.taskMeta}>
-                      <span className={styles.owner}>👤 {task.owner}</span>
-                      {task.deadline && <span className={styles.deadline}>📅 {task.deadline}</span>}
+                      <span className={styles.owner}>Owner: {task.owner}</span>
+                      {task.deadline && <span className={styles.deadline}>Due: {task.deadline}</span>}
                     </div>
                   </div>
                 ))}
@@ -77,7 +77,7 @@ export function ContinuationAssistant({
           {/* Unresolved Decisions */}
           {snapshot.unresolvedDecisions.length > 0 && (
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>❓ Unresolved Decisions</h3>
+              <h3 className={styles.sectionTitle}>Unresolved Decisions</h3>
               <div className={styles.itemGrid}>
                 {snapshot.unresolvedDecisions.map((decision, idx) => (
                   <div key={idx} className={styles.decisionCard}>
@@ -92,7 +92,7 @@ export function ContinuationAssistant({
           {/* Risks */}
           {snapshot.risks.length > 0 && (
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>⚠️ Identified Risks</h3>
+              <h3 className={styles.sectionTitle}>Identified Risks</h3>
               <ul className={styles.list}>
                 {snapshot.risks.map((risk, idx) => (
                   <li key={idx} className={styles.listItem + ' ' + styles.riskItem}>

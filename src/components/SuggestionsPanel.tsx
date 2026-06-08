@@ -1,42 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { SuggestionBatch, Suggestion } from '@/types';
 import { SuggestionCard } from './SuggestionCard';
 import { formatTimestamp, formatLatency } from '@/lib/utils';
 import styles from './SuggestionsPanel.module.css';
+import { SuggestionTier } from '@/lib/groq';
 
 interface Props {
-  batches: SuggestionBatch[];
-  isLoading: boolean;
-  error: string | null;
+  batches:           SuggestionBatch[];
+  isLoading:         boolean;
+  error:             string | null;
+  activeTier:        SuggestionTier;
   onSuggestionClick: (s: Suggestion) => void;
-  onRefresh: () => void;
+  onRefresh:         () => void;
 }
 
-export function SuggestionsPanel({ batches, isLoading, error, onSuggestionClick, onRefresh }: Props) {
-  const isEmpty = batches.length === 0;
-  // Older batches are collapsed by default — user can expand
-  const [expandedBatchIds, setExpandedBatchIds] = useState<Set<string>>(new Set());
+const TIER_META: Record<SuggestionTier, {
+  dot:      string;
+  label:    string;
+  emptyMsg: string;
+}> = {
+  HIGH:     { dot: '🔴', label: 'High Priority',    emptyMsg: 'Critical corrections, questions, and insights will appear here.' },
+  MEDIUM:   { dot: '🟡', label: 'Mid-Level',        emptyMsg: 'Nuanced observations and context gaps will appear here.' },
+  INSIGHTS: { dot: '🔵', label: 'Meta Insights',    emptyMsg: 'Patterns, contradictions, and conversational analysis will appear here.' },
+};
 
-  const toggleBatch = (id: string) => {
-    setExpandedBatchIds((prev) => {
+export function SuggestionsPanel({ batches, isLoading, error, activeTier, onSuggestionClick, onRefresh }: Props) {
+  const meta    = TIER_META[activeTier];
+  const isEmpty = batches.length === 0;
+
+  // Collapse older batches — only latest expanded by default
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
-  };
+  }, []);
+
+  const latestBatch = batches[0] ?? null;
 
   return (
     <section className={styles.panel}>
+
+      {/* ── Panel header ──────────────────────────────────────────────── */}
       <header className={styles.header}>
         <div className={styles.titleRow}>
-          <span className={styles.icon}>⚡</span>
           <h2 className={styles.title}>Live Suggestions</h2>
           {batches.length > 0 && (
             <span className={styles.batchCount}>{batches.length} batch{batches.length !== 1 ? 'es' : ''}</span>
           )}
-          {isLoading && <span className={styles.loadingPill}>Thinking…</span>}
+          {isLoading && <span className={styles.loadingPill}>Analysing…</span>}
         </div>
         <button
           id="suggestions-refresh-btn"
@@ -51,90 +67,93 @@ export function SuggestionsPanel({ batches, isLoading, error, onSuggestionClick,
       </header>
 
       {error && (
-        <div className={styles.errorBanner} role="alert">
-          ⚠ {error}
-        </div>
+        <div className={styles.errorBanner} role="alert">{error}</div>
       )}
 
       <div className={styles.scrollArea}>
-        {/* Empty + skeleton states */}
+
+        {/* Empty + not loading */}
         {isEmpty && !isLoading && (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>💡</div>
-            <p>Suggestions appear here as you speak.</p>
-            <p className={styles.emptyHint}>They refresh every 30 seconds, or hit Refresh manually.</p>
+            <div className={styles.emptyIcon}>{meta.dot}</div>
+            <p>{meta.emptyMsg}</p>
+            <p className={styles.emptyHint}>Auto-updates on every new transcription chunk.</p>
           </div>
         )}
 
+        {/* Skeleton while loading first batch */}
         {isLoading && isEmpty && (
           <div className={styles.skeletonGroup}>
-            {[0, 1, 2].map((i) => (
+            {/* 3 skeletons matching the 3 card types */}
+            {[0, 1, 2].map(i => (
               <div key={i} className={styles.skeleton} style={{ animationDelay: `${i * 0.12}s` }} />
             ))}
           </div>
         )}
 
-        {/* Loading overlay on top of existing batches */}
+        {/* Skeleton overlay on existing batches while refreshing */}
         {isLoading && !isEmpty && (
           <div className={styles.loadingOverlay}>
-            <div className={styles.skeletonGroup}>
-              {[0, 1, 2].map((i) => (
-                <div key={i} className={styles.skeleton} style={{ animationDelay: `${i * 0.12}s` }} />
+            {[0, 1, 2].map(i => (
+              <div key={i} className={styles.skeleton} style={{ animationDelay: `${i * 0.1}s`, marginBottom: i < 2 ? '6px' : 0 }} />
+            ))}
+          </div>
+        )}
+
+        {/* ── LATEST BATCH — always expanded, no toggle header ─────── */}
+        {latestBatch && !isLoading && (
+          <div className={styles.latestBatch}>
+            <div className={styles.latestMeta}>
+              <span className={styles.latestDot} />
+              <span className={styles.latestLabel}>Latest</span>
+              <span className={styles.batchTime}>{formatTimestamp(latestBatch.timestamp)}</span>
+              {latestBatch.latencyMs && (
+                <span className={styles.batchLatency}>{formatLatency(latestBatch.latencyMs)}</span>
+              )}
+            </div>
+
+            {/* 3 cards flat — no extra container chrome */}
+            <div className={styles.cardStack}>
+              {latestBatch.suggestions.map(s => (
+                <SuggestionCard
+                  key={s.id}
+                  suggestion={s}
+                  onClick={onSuggestionClick}
+                  isNew={true}
+                />
               ))}
             </div>
           </div>
         )}
 
-        {/* Batch history — newest on top */}
-        {batches.map((batch, batchIdx) => {
-          const isLatest = batchIdx === 0;
-          const isExpanded = isLatest || expandedBatchIds.has(batch.id);
+        {/* ── OLDER BATCHES — collapsible ──────────────────────────── */}
+        {batches.slice(1).map((batch, idx) => {
+          const batchNum   = batches.length - 1 - idx;
+          const isExpanded = expandedIds.has(batch.id);
 
           return (
-            <div
-              key={batch.id}
-              className={`${styles.batch} ${isLatest ? styles.batchLatest : styles.batchOld}`}
-            >
-              {/* Batch header — clickable for older batches to toggle */}
+            <div key={batch.id} className={styles.oldBatch}>
               <button
-                className={styles.batchHeader}
-                onClick={isLatest ? undefined : () => toggleBatch(batch.id)}
+                className={styles.oldBatchHeader}
+                onClick={() => toggleExpand(batch.id)}
                 aria-expanded={isExpanded}
-                disabled={isLatest}
-                title={isLatest ? 'Latest suggestions' : isExpanded ? 'Collapse' : 'Expand'}
               >
-                <div className={styles.batchHeaderLeft}>
-                  {isLatest ? (
-                    <span className={styles.latestBadge}>
-                      <span className={styles.latestDot} />
-                      Latest
-                    </span>
-                  ) : (
-                    <span className={styles.oldBadge}>
-                      #{batches.length - batchIdx}
-                    </span>
-                  )}
-                  <span className={styles.batchTime}>{formatTimestamp(batch.timestamp)}</span>
-                  {batch.latencyMs && (
-                    <span className={styles.batchLatency} title="Time to generate this batch">
-                      {formatLatency(batch.latencyMs)}
-                    </span>
-                  )}
-                </div>
-                {!isLatest && (
-                  <span className={styles.chevron}>{isExpanded ? '▲' : '▼'}</span>
+                <span className={styles.oldBadge}>#{batchNum}</span>
+                <span className={styles.batchTime}>{formatTimestamp(batch.timestamp)}</span>
+                {batch.latencyMs && (
+                  <span className={styles.batchLatency}>{formatLatency(batch.latencyMs)}</span>
                 )}
+                <span className={styles.chevron}>{isExpanded ? '▲' : '▼'}</span>
               </button>
 
-              {/* Cards — always shown for latest, toggle for older */}
               {isExpanded && (
-                <div className={styles.cardGrid}>
-                  {batch.suggestions.map((s) => (
+                <div className={styles.cardStack}>
+                  {batch.suggestions.map(s => (
                     <SuggestionCard
                       key={s.id}
                       suggestion={s}
                       onClick={onSuggestionClick}
-                      isNew={isLatest}
+                      isNew={false}
                     />
                   ))}
                 </div>

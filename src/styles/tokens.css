@@ -1,0 +1,334 @@
+/* ============================================================================
+   ConvoIQ Premium Design System — Design Tokens
+   Zero-runtime-overhead utility styles for enterprise-grade UI
+   ============================================================================ */
+
+:root {
+  /* ── Core Dark Palette ──────────────────────────────────────────────────── */
+  --bg-app: #09090b;
+  --panel-bg: rgba(24, 24, 27, 0.72);
+  --panel-hover: rgba(39, 39, 42, 0.6);
+  --border-subtle: rgba(63, 63, 70, 0.35);
+  
+  /* ── Text Hierarchy ─────────────────────────────────────────────────────── */
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-inverted: #09090b;
+  
+  /* ── Status & Semantic Colors ───────────────────────────────────────────── */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --purple-accent: #9333ea;
+  --info: #3b82f6;
+  
+  /* ── Status backgrounds with opacity ────────────────────────────────────── */
+  --success-bg: rgba(16, 185, 129, 0.04);
+  --success-border: rgba(16, 185, 129, 0.35);
+  --warning-bg: rgba(245, 158, 11, 0.04);
+  --warning-border: rgba(245, 158, 11, 0.35);
+  --danger-bg: rgba(239, 68, 68, 0.04);
+  --danger-border: rgba(239, 68, 68, 0.35);
+  
+  /* ── Spacing Scale ──────────────────────────────────────────────────────── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  
+  /* ── Border Radius ──────────────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-primary: var(--font-outfit), 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* ── Font Sizes ─────────────────────────────────────────────────────────── */
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-base: 12px;
+  --text-md: 14px;
+  --text-lg: 15px;
+  --text-xl: 16px;
+  --text-2xl: 18px;
+  --text-3xl: 20px;
+  
+  /* ── Line Heights ────────────────────────────────────────────────────────── */
+  --lh-tight: 1.2;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.75;
+  
+  /* ── Letter Spacing ─────────────────────────────────────────────────────── */
+  --tracking-tighter: -0.02em;
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  
+  /* ── Shadows ────────────────────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.25);
+  
+  /* ── Transitions ────────────────────────────────────────────────────────── */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --easing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --easing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ── Grid Layout Dimensions ─────────────────────────────────────────────── */
+  --grid-sidebar-width: 320px;
+  --grid-copilot-width: 360px;
+  --grid-gap: 16px;
+  --layout-padding: 16px;
+}
+
+/* ── Utility Color Classes ───────────────────────────────────────────────── */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.bg-app {
+  background-color: var(--bg-app);
+}
+
+.bg-panel {
+  background-color: var(--panel-bg);
+}
+
+.border-subtle {
+  border-color: var(--border-subtle);
+}
+
+/* ── Status Badge Utilities ─────────────────────────────────────────────── */
+.badge-success {
+  background-color: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
+}
+
+.badge-warning {
+  background-color: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+}
+
+.badge-danger {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+}
+
+/* ── Typography Utilities ───────────────────────────────────────────────── */
+.font-primary {
+  font-family: var(--font-primary);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.text-xs {
+  font-size: var(--text-xs);
+  line-height: var(--lh-tight);
+}
+
+.text-sm {
+  font-size: var(--text-sm);
+  line-height: var(--lh-tight);
+}
+
+.text-base {
+  font-size: var(--text-base);
+  line-height: var(--lh-normal);
+}
+
+.text-md {
+  font-size: var(--text-md);
+  line-height: var(--lh-normal);
+}
+
+.text-lg {
+  font-size: var(--text-lg);
+  line-height: var(--lh-normal);
+}
+
+.text-xl {
+  font-size: var(--text-xl);
+  line-height: var(--lh-relaxed);
+}
+
+.tracking-wider {
+  letter-spacing: var(--tracking-wider);
+}
+
+.tracking-widest {
+  letter-spacing: var(--tracking-widest);
+}
+
+/* ── Spacing Utilities ──────────────────────────────────────────────────── */
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+.p-md {
+  padding: var(--space-md);
+}
+
+.p-lg {
+  padding: var(--space-lg);
+}
+
+.px-lg {
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
+}
+
+.py-md {
+  padding-top: var(--space-md);
+  padding-bottom: var(--space-md);
+}
+
+/* ── Rounded Utilities ──────────────────────────────────────────────────── */
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+/* ── Border Utilities ────────────────────────────────────────────────────── */
+.border-left-2 {
+  border-left: 2px solid;
+}
+
+.border-left-1 {
+  border-left: 1px solid;
+}
+
+/* ── Flex Utilities ─────────────────────────────────────────────────────── */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Overflow Utilities ─────────────────────────────────────────────────── */
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+/* ── Transition Utilities ────────────────────────────────────────────────── */
+.transition-fast {
+  transition: all var(--duration-fast) var(--easing-ease-in-out);
+}
+
+.transition-normal {
+  transition: all var(--duration-normal) var(--easing-ease-in-out);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Fact-Check Status Styles ────────────────────────────────────────────── */
+.fact-check-verified {
+  border-left: 2px solid var(--success);
+  background-color: var(--success-bg);
+  padding-left: var(--space-lg);
+}
+
+.fact-check-uncertain {
+  border-left: 2px solid var(--warning);
+  background-color: var(--warning-bg);
+  padding-left: var(--space-lg);
+}
+
+.fact-check-incorrect {
+  border-left: 2px solid var(--danger);
+  background-color: var(--danger-bg);
+  padding-left: var(--space-lg);
+}
+
+/* ── Wave Animation for Active Recording ─────────────────────────────────── */
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(0.5);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.wave-bar {
+  animation: wave var(--duration-fast) ease-in-out infinite;
+}
+
+.wave-bar:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.wave-bar:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+.wave-bar:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+.wave-bar:nth-child(4) {
+  animation-delay: 300ms;
+}
+
+.wave-bar:nth-child(5) {
+  animation-delay: 400ms;
+}

@@ -318,19 +318,15 @@ export const GROQ_MODELS = {
 } as const;
 
 export const SUGGESTION_TYPE_LABELS: Record<string, string> = {
-  'question':      'Question to Ask',
-  'fact-check':    'Fact Check',
-  'talking-point': 'Talking Point',
-  'answer':        'Suggested Answer',
-  'clarification': 'Clarification',
+  'fact-check': '✅ Fact Check',
+  'question':   '❓ Question to Ask',
+  'insight':    '💡 Insight',
 };
 
 export const SUGGESTION_TYPE_COLORS: Record<string, string> = {
-  'question':      '#5b8af5',
-  'fact-check':    '#f5a94a',
-  'talking-point': '#7ecb8b',
-  'answer':        '#c47ef5',
-  'clarification': '#f56b8a',
+  'fact-check': '#f5a94a',   // amber
+  'question':   '#5b8af5',   // blue
+  'insight':    '#7ecb8b',   // green
 };
 
 // ------------------------------------------------------------------

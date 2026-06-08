@@ -106,7 +106,7 @@ export function ChatPanel({ messages, isStreaming, error, onSendMessage }: Props
 
       {error && (
         <div className={styles.errorBanner} role="alert">
-          ⚠ {error}
+          {error}
         </div>
       )}
 
@@ -114,7 +114,6 @@ export function ChatPanel({ messages, isStreaming, error, onSendMessage }: Props
         {/* ── Empty state with smart quick prompts ─────────────────────── */}
         {isEmpty && !isStreaming && (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>🤖</div>
             <p>Ask anything about the conversation, or pick a quick prompt:</p>
             <div className={styles.quickPromptsGrid}>
               {QUICK_PROMPTS.map((q) => (

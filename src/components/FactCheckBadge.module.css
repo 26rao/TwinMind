@@ -1,0 +1,52 @@
+.badge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.verified {
+  background: var(--success-bg);
+  border-left: 3px solid var(--success);
+  border-color: var(--success-border);
+}
+
+.uncertain {
+  background: var(--warning-bg);
+  border-left: 3px solid var(--warning);
+  border-color: var(--warning-border);
+}
+
+.incorrect {
+  background: var(--danger-bg);
+  border-left: 3px solid var(--danger);
+  border-color: var(--danger-border);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.status {
+  color: inherit;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  font-weight: 700;
+}
+
+.claim {
+  color: var(--text-primary);
+  line-height: var(--lh-normal);
+  margin: 0;
+  font-weight: 600;
+}
+
+.explanation {
+  color: var(--text-secondary);
+  line-height: var(--lh-normal);
+  margin: 0;
+}

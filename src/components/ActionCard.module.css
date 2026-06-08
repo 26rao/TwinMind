@@ -1,0 +1,112 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--panel-hover);
+  backdrop-filter: blur(8px);
+  transition: all var(--duration-fast) var(--easing-ease-in-out);
+}
+
+.card:hover {
+  background: rgba(147, 51, 234, 0.08);
+  border-color: var(--purple-accent);
+}
+
+.priority-high {
+  border-left: 3px solid var(--danger);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.04) 0%, rgba(24, 24, 27, 0.5) 100%);
+}
+
+.priority-medium {
+  border-left: 3px solid var(--warning);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.04) 0%, rgba(24, 24, 27, 0.5) 100%);
+}
+
+.priority-low {
+  border-left: 3px solid var(--success);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(24, 24, 27, 0.5) 100%);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.priority {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.badge {
+  color: var(--text-secondary);
+  font-weight: 700;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+}
+
+.dismissBtn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--easing-ease-in-out);
+}
+
+.dismissBtn:hover {
+  background: var(--border-subtle);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.task {
+  color: var(--text-primary);
+  line-height: var(--lh-normal);
+  margin: 0;
+}
+
+.metadata {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.owner,
+.deadline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.label {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  font-weight: 600;
+}
+
+.value {
+  color: var(--text-primary);
+  font-weight: 500;
+}

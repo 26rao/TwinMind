@@ -1,76 +1,165 @@
-# ConvoIQ Live Copilot
+# ConvoIQ — Live Meeting Intelligence Copilot
 
 A premium, always-on AI meeting copilot built with **Next.js**, powered by **Groq's LPU infrastructure** for ultra-low latency transcription and real-time suggestions.
 
-## Key Features
+## ⚡ Key Features
 
-- **Live Transcription**: Auto-transcribe in 30-second chunks via Groq Whisper (Large V3, Turbo, or Distil variants)
-- **Real-Time Suggestions**: 3 contextual, high-value suggestions every 30s
+- 🎙️ **Live Transcription**: Auto-transcribe in 30-second chunks via Groq Whisper (Large V3, Turbo, or Distil variants)
+- ⚡ **Real-Time Suggestions**: 3 contextual, high-value suggestions every 30s
   - **Questions**: Non-obvious, insight-revealing questions
   - **Fact-Checks**: Verify or correct specific claims  
   - **Talking Points**: Compelling angles not yet raised
   - **Answers**: Direct responses to questions just asked
   - **Clarifications**: Resolve ambiguities or contradictions
-- **Live Fact-Check Mode** (toggle with shield icon): Automatically identifies and verifies factual claims, numbers, dates, and metrics in real-time
-- **Streaming Chat**: Ask follow-up questions with full meeting context and get intelligent answers
-- **Session Continuity**: Resume conversations with the same client—access previous notes, pending tasks, and discussion topics
-- **Meeting Reports**: Structured summaries with key points, decisions, open questions, risks, and action items
-- **Export Options**: Download as JSON, Markdown, or email-ready format
-- **Demo Mode**: Inject sample conversation chunks instantly to test suggestions without live recording
+- 🛡️ **Live Fact-Check Mode** (toggle with shield icon): Automatically identifies and verifies factual claims, numbers, dates, and metrics in real-time
+- 💬 **Streaming Chat**: Ask follow-up questions with full meeting context and get intelligent answers
+- 🧠 **Session Continuity**: Resume conversations with the same client—access previous notes, pending tasks, and discussion topics
+- 📊 **Meeting Reports**: Structured summaries with key points, decisions, open questions, risks, and action items
+- 📁 **Export Options**: Download as JSON, Markdown, or email-ready format
+- 📝 **Demo Mode**: Inject sample conversation chunks instantly to test suggestions without live recording
 
 ## Live Demo
- https://twin-mind-9ecuutaok-nehas-projects-c2f830a6.vercel.app
+🚀 https://twin-mind-three.vercel.app/
 
 
 ## 🏗 Stack
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | Next.js 16 (App Router) | SSR-ready, excellent DX, Vercel-native |
-| Styling | Vanilla CSS Modules | Full control, zero runtime overhead |
-| **Transcription** | Groq Whisper (v3, Turbo, Distil) | Fastest available STT; choice of accuracy vs. speed |
-| **LLM (Suggestions)** | Groq OSS/Llama/Gemma | Multiple options: 120B MoE, 70B, or 8B for speed |
-| Fonts | Outfit + JetBrains Mono (Google Fonts) | Premium feel, monospace for timestamps |
-| State | React hooks + localStorage | No backend needed, instant persistence |
+| ✅ | **Fact Check** | Corrections to inaccurate claims in the transcript |
+| ❓ | **Question to Ask** | The highest-value follow-up based on what was said |
+| 💡 | **Insight** | Most important takeaway from the latest segment |
 
-### Available Models (Settings)
+> Cards are grounded strictly in the transcript. The AI cannot invent names, tasks, deadlines, or people not mentioned.
 
-**Transcription Models:**
-- Whisper Large V3 (best accuracy)
-- Whisper Large V3 Turbo (faster)
-- Distil Whisper (English-only, fastest)
+---
 
-**LLM Models:**
-- GPT-OSS 120B (Recommended — 200+ t/s, 131k context)
-- Llama 3.3 70B Versatile
-- Llama 3.1 8B Instant (fastest)
-- Gemma 2 9B
+## Features
 
-## Setup
+### 🎙️ Live Transcription
+- Records in 10-second audio chunks via `MediaRecorder`
+- Sends to Groq Whisper (Large V3, Turbo, or Distil — configurable)
+- Segments appear in the Live Feed column as they arrive
+- **Fact-Check Mode**: automatically annotates transcript segments with claim verification
 
-```bash
-# 1. Clone and install
-git clone https://github.com/26rao/TwinMind
-cd TwinMind
-npm install
+### 🧠 Tier-Aware AI Suggestions
+- 3 independent Groq LLM calls fire in parallel on every new transcription chunk
+- HIGH / MEDIUM / INSIGHTS tabs cache their own batches independently
+- Previous batches collapse into an accordion — you can expand any historical batch
+- Suggestions auto-refresh; manual "Refresh" button available
+- Temperature set to `0.3` for minimal hallucination
 
-# 2. Run dev server
-npm run dev
-# → Open http://localhost:3000
+### 💬 AI Copilot Chat (Column 3)
+- Streaming chat with full meeting context (transcript + rolling summary)
+- Context pills: Summary · Risks · Action Items · Open Questions · Key Metrics
+- 6 pre-built quick-prompt cards
+- Free-text input for any question about the meeting
 
-# 3. Enter your Groq API key in the Settings modal (auto-opens on first visit)
-```
+### 📤 Session Export
+Downloads trigger only when there is recorded content:
+- **JSON** → `meeting_report_YYYY-MM-DD.json`
+- **Markdown** → `meeting_report_YYYY-MM-DD.md`
+- **PDF** → browser print dialog with styled HTML
 
-You can get a free Groq API key at [console.groq.com](https://console.groq.com).
+### 📥 Upload Previous Session
+Load context before starting a new session. The uploader accepts:
+- ConvoIQ session exports (`meeting_report_*.json`)
+- Any JSON file with at least one of: `transcript`, `text`, `content`, `notes`, `summary`, `rollingSummary`, `chatHistory`
+- Hand-crafted JSON notes — the uploader normalises whatever structure it finds
+
+When a file is loaded, context is injected into:
+1. The **rolling summary** — so all 3 suggestion tiers see it immediately
+2. The **AI Copilot chat** — so the chat can answer questions about the prior session
+
+### 👤 Login & Session Persistence
+- Name-based login stored in `localStorage`
+- User avatar (initials) shown in header
+- Session duration timer
+- Clear session button resets all state
+
+### 🎭 Demo Mode
+- 5 built-in conversation scenarios: Business Strategy, Technical Design, Science Discussion, Sales/Negotiation, Job Interview
+- Paste your own transcript chunk for instant testing
+- Inject a single segment or a full scenario
+
+---
 
 ## Architecture
 
 ```
+┌─────────────────────────────────────────────────────────────────┐
+│                        SESSION HEADER                           │
+│        Logo · Timer · ▶ START/⏹ STOP · Export · Settings · NR  │
+├──────────────────┬──────────────────────┬───────────────────────┤
+│   LIVE FEED      │   INTELLIGENCE       │   AI COPILOT          │
+│                  │                      │                        │
+│  • Transcript    │  [HIGH][MED][INSIGH] │  Context pills         │
+│  • Fact badges   │                      │  Quick prompts         │
+│  • Controls:     │  ✅ Fact Check       │  Streaming chat        │
+│    ↻ Refresh     │  ❓ Question to Ask  │  Free-text input       │
+│    Fact-Check    │  💡 Insight          │                        │
+│    Demo          │                      │                        │
+├──────────────────┴──────────────────────┴───────────────────────┤
+│  STT latency · FactCheck ms · Chat latency · Throughput · Model │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Technology Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router, Webpack) |
+| Styling | Vanilla CSS Modules + design tokens |
+| Layout | `100vh` CSS Grid — 3 fixed columns |
+| Transcription | Groq Whisper (Large V3 / Turbo / Distil) |
+| LLM | Groq (configurable: OSS 120B, Llama 70B, Gemma, etc.) |
+| Audio capture | `MediaRecorder` API — 10s chunks |
+| State | React hooks + `localStorage` |
+| Fonts | Outfit (display) + JetBrains Mono (timestamps) |
+
+### Client-Side Only
+No backend proxy. All API calls go directly from the browser to `api.groq.com`. Your audio and transcript data never touch a server you don't control. Zero data retention.
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- A [Groq API key](https://console.groq.com) (free tier works)
+
+### Installation
+
+```bash
+git clone https://github.com/26rao/TwinMind.git
+cd TwinMind
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Configuration
+Click ⚙ in the top-right header to open Settings:
+
+| Setting | Default | Notes |
+|---|---|---|
+| Groq API Key | *(required)* | Get one at console.groq.com |
+| LLM Model | `openai/gpt-oss-120b` | Any Groq-supported chat model |
+| Transcription Model | `whisper-large-v3-turbo` | Or `whisper-large-v3`, `distil-whisper-large-v3-en` |
+| Auto-refresh interval | 30s | How often suggestions regenerate |
+| Recent chunks for suggestions | 3 | Raw chunks sent to suggestion prompt |
+
+---
+
+## File Structure
+
+```
 src/
 ├── app/
-│   ├── layout.tsx             # Root layout: fonts, SEO, SettingsProvider
-│   ├── page.tsx               # Main page: 3-column orchestrator + session continuity
-│   └── globals.css            # Design tokens, reset, background gradients
+│   ├── page.tsx                  # Main dashboard — 3-column layout
+│   ├── page.module.css
+│   └── layout.tsx
 ├── components/
 │   ├── TranscriptPanel        # Left: mic, auto-scroll, 30s chunks, demo mode
 │   ├── SuggestionsPanel       # Middle: batched suggestion cards (auto-refresh every 30s)
@@ -78,8 +167,8 @@ src/
 │   ├── ChatPanel              # Right: streaming chat with context-aware quick prompts
 │   ├── LatencyBar             # Visual performance metric display
 │   ├── SettingsModal          # Groq API key, LLM model, transcription model, prompts
-│   ├── SessionSnapshot        # Banner: last meeting snapshot + resume options
-│   ├── ContinuationAssistant  # Modal: full session history + smart follow-ups
+│   ├── SessionSnapshot        # 🧠 Banner: last meeting snapshot + resume options
+│   ├── ContinuationAssistant  # 🧠 Modal: full session history + smart follow-ups
 │   └── FactCheckRow           # Live fact-check display under each transcript segment
 ├── context/
 │   └── SettingsContext        # Global settings + localStorage persistence
@@ -88,11 +177,11 @@ src/
 │   ├── useSuggestions         # Auto-refresh every 30s + manual refresh
 │   ├── useChat                # Streaming chat and suggestion expansion
 │   ├── useRollingSummary      # Compresses old chunks into dense, fact-rich summary
-│   └── useSessionContinuity   # Client selection, snapshot gen, history mgmt
+│   └── useSessionContinuity   # 🧠 Client selection, snapshot gen, history mgmt
 ├── lib/
 │   ├── groq.ts                # All Groq API calls (transcription, suggestions, chat, fact-check, reports)
 │   ├── defaults.ts            # Engineered prompts for suggestions, summaries, fact-checks, reports
-│   ├── sessionStorage.ts      # localStorage for session history per client
+│   ├── sessionStorage.ts      # 🧠 localStorage for session history per client
 │   └── utils.ts               # Export, ID generation, formatting, download helpers
 └── types/
     └── index.ts               # Domain types: Suggestion, FactCheck, MeetingSession, etc.
@@ -125,7 +214,7 @@ src/
 - Transcription model selection
 - Custom prompt editing (suggestions, summaries, fact-checks, reports)
 
-**SessionSnapshot & ContinuationAssistant** 
+**SessionSnapshot & ContinuationAssistant** (🧠)
 - Display last meeting with client
 - Resume with pending tasks, unresolved decisions, or specific discussion topics
 - Smart continuation prompts auto-generated from previous session
@@ -148,11 +237,11 @@ src/
 - **❕ Clarification**: Resolves ambiguities or contradictions
 
 ### Quick Export Options
-- **JSON**: Full structured data (segments, suggestions, metadata)
-- **Markdown**: Formatted report with key points, decisions, action items
-- **Email**: Plain-text draft ready to paste into email client
+- **⬇️ JSON**: Full structured data (segments, suggestions, metadata)
+- **⬇️ Markdown**: Formatted report with key points, decisions, action items
+- **⬇️ Email**: Plain-text draft ready to paste into email client
 
-## Prompt Strategy
+## 🧠 Prompt Strategy
 
 ### Design Philosophy
 
@@ -198,9 +287,9 @@ Each prompt is engineered to:
 **When enabled (🛡️):**
 - Scans each transcript segment for factual claims: numbers, dates, metrics, names, scientific facts
 - Classifies each claim as:
-  - **Verified**: Known to be true
-  - **Uncertain**: Needs verification
-  - **Incorrect**: Known to be false (often a misstatement in the meeting)
+  - ✅ **Verified**: Known to be true
+  - ⚠️ **Uncertain**: Needs verification
+  - ❌ **Incorrect**: Known to be false (often a misstatement in the meeting)
 - Provides 1-sentence expert explanation
 
 **Example:**
@@ -247,7 +336,7 @@ Extracts:
 | Fact-Checks | Current segment (~1–2 paragraphs) | Focused verification without noise |
 | Reports | Full transcript | Comprehensive analysis for export |
 
-## Session Continuity Assistant (NEW)
+## 🧠 Session Continuity Assistant (NEW)
 
 Never start a meeting from scratch again. ConvoIQ now remembers past conversations with the same client and helps you resume seamlessly.
 
@@ -260,7 +349,7 @@ Never start a meeting from scratch again. ConvoIQ now remembers past conversatio
 2. **Second Meeting with ABC Corp**
    - SessionSnapshot banner appears at top:
      ```
-      Continuing from last meeting with ABC Corp
+     📌 Continuing from last meeting with ABC Corp
      Pending: API integration, UI redesign
      Unresolved: Deployment strategy
      ⚠ Risks: Timeline unclear
@@ -333,7 +422,7 @@ The **LatencyBar** component displays these metrics at the bottom of the UI, hel
 | Chat response (first token) | ~400–800ms | Streaming; Groq LPU parallelism |
 | Fact-check (per segment) | ~300–600ms | Smaller context window |
 
-## Quick Start
+## 🚀 Quick Start
 
 1. **Clone & install**
    ```bash
@@ -346,7 +435,7 @@ The **LatencyBar** component displays these metrics at the bottom of the UI, hel
 
 3. **Open Settings** (auto-opens on first visit) and paste your API key
 
-4. **Test with Demo Mode** (button):
+4. **Test with Demo Mode** (📝 button):
    - Load a pre-built scenario
    - Or paste sample transcript text
    - See suggestions and fact-checks in real-time
@@ -367,7 +456,7 @@ Edit directly in the UI without restarting:
 
 All settings auto-save to localStorage.
 
-## Tradeoffs
+## ⚠️ Tradeoffs
 
 - **No backend** — All API calls go direct from browser to Groq. This is fine for this prototype; a production version would proxy through a backend to protect keys.
 - **MediaRecorder chunking** — Web Audio API chunks every 30s by stopping+restarting the recorder. This avoids streaming audio, keeping complexity low at acceptable latency.

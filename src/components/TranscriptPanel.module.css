@@ -64,8 +64,10 @@
 
 .controls {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .micBtn {
@@ -104,24 +106,30 @@
 }
 
 .iconBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.09);
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: 0.02em;
+  gap: 4px;
 }
 
 .iconBtn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.11);
   color: var(--text-primary);
+  border-color: rgba(255,255,255,0.18);
 }
 
 .iconBtn:disabled {
@@ -139,7 +147,7 @@
   background: rgba(126, 203, 139, 0.15);
   border-color: rgba(126, 203, 139, 0.4);
   color: #7ecb8b;
-  box-shadow: 0 0 10px rgba(126, 203, 139, 0.15);
+  box-shadow: 0 0 8px rgba(126, 203, 139, 0.15);
 }
 
 .factCheckRow {

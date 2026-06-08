@@ -1,0 +1,216 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: rgba(18, 18, 28, 0.97);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 32px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  animation: pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 150ms ease;
+}
+.closeBtn:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-family: var(--font-primary);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Drop zone */
+.dropZone {
+  border: 2px dashed rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  background: rgba(255,255,255,0.02);
+}
+
+.dropZone:hover {
+  border-color: rgba(147, 51, 234, 0.5);
+  background: rgba(147, 51, 234, 0.04);
+}
+
+.dragging {
+  border-color: var(--purple-accent);
+  background: rgba(147, 51, 234, 0.08);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15);
+}
+
+.dropIcon {
+  font-size: 28px;
+  color: var(--text-muted);
+}
+
+.dropText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.dropText code {
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+  color: var(--purple-accent);
+}
+
+.dropHint {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.fileInput {
+  display: none;
+}
+
+/* Error */
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+/* Preview card */
+.preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+}
+
+.previewIcon { font-size: 20px; flex-shrink: 0; }
+
+.previewInfo { flex: 1; min-width: 0; }
+
+.previewName {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--success);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.previewMeta {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 150ms;
+}
+.clearBtn:hover { color: var(--danger); }
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.loadBtn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, var(--purple-accent), #7c3aed);
+  color: #fff;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.3);
+  transition: all 150ms ease;
+}
+.loadBtn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(147, 51, 234, 0.4); }
+
+.skipBtn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.skipBtn:hover { border-color: rgba(255,255,255,0.25); color: var(--text-primary); }

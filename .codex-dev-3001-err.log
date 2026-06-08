@@ -1,0 +1,8 @@
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          4024
+- Dir:          C:\Users\Neha Rao\OneDrive\twinmind
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 4024 /F to stop it.

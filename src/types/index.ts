@@ -1,6 +1,6 @@
 // Core domain types for ConvoIQ Live Suggestions
 
-export type SuggestionType = 'question' | 'fact-check' | 'talking-point' | 'answer' | 'clarification';
+export type SuggestionType = 'fact-check' | 'question' | 'insight';
 
 export interface Suggestion {
   id: string;
@@ -29,8 +29,9 @@ export interface TranscriptSegment {
   text: string;
   timestamp: number;
   isFinal: boolean;
-  chunkIndex: number;   // Which 30s chunk this belongs to
+  chunkIndex: number;   // Which 10s chunk this belongs to
   factChecks?: FactCheck[];
+  latency?: number;     // Transcription latency in milliseconds
 }
 
 export interface ActionItem {

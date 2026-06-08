@@ -14,7 +14,7 @@ export function LatencyBar({ metrics, isSummarizing }: Props) {
 
   return (
     <div className={styles.bar} title="Performance metrics — lower is better">
-      <span className={styles.label}>⚡ Latency</span>
+      <span className={styles.label}>Latency</span>
 
       <div className={styles.metrics}>
         <Metric

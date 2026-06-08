@@ -1,153 +1,368 @@
-.layout {
+/* ============================================================================
+   ConvoIQ — 3-Column Command-Center Layout  (100 vh, zero scroll)
+   ============================================================================
+   Structure
+   ─────────
+   ┌───────────────────────── HEADER ──────────────────────────┐  row 1 (auto)
+   ├───────────────────────── BANNER ──────────────────────────┤  row 2 (auto, 0 when absent)
+   │  LIVE FEED  │  INTELLIGENCE CENTER  │    AI COPILOT       │  row 3 (1fr)
+   ├───────────────────────── FOOTER ──────────────────────────┤  row 4 (auto)
+   └───────────────────────────────────────────────────────────┘
+   ============================================================================ */
+
+/* ── Root container ─────────────────────────────────────────────────────── */
+.dashboardContainer {
+  display: grid;
+
+  /* 3 columns: live-feed | intelligence | copilot */
+  grid-template-columns: 320px 1fr 340px;
+
+  /* 4 rows: header | (optional banner) | columns | footer */
+  grid-template-rows: auto auto 1fr auto;
+
+  /* Explicit named areas make the layout impossible to mis-assign */
+  grid-template-areas:
+    "header  header  header"
+    "banner  banner  banner"
+    "live    intel   copilot"
+    "footer  footer  footer";
+
+  gap: 12px;
   height: 100vh;
+  max-height: 100vh;
+  padding: 12px;
+  background-color: var(--bg-app);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ── Top recording bar (spans all) ──────────────────────────────────────── */
+.headerWrapper  { grid-area: header; }
+.bannerWrapper  { grid-area: banner; }
+
+/* ── Three content columns ──────────────────────────────────────────────── */
+.liveFeedColumn     { grid-area: live; }
+.intelligenceColumn { grid-area: intel; }
+.copilotColumn      { grid-area: copilot; }
+
+/* ── Footer metrics bar (spans all) ────────────────────────────────────── */
+.footerWrapper { grid-area: footer; }
+
+/* ============================================================================
+   SHARED COLUMN STYLES
+   ============================================================================ */
+.liveFeedColumn,
+.intelligenceColumn,
+.copilotColumn {
   display: flex;
   flex-direction: column;
-  background: var(--bg-base);
   overflow: hidden;
+  min-height: 0;          /* essential for flex children to scroll */
+
+  /* Glassmorphism panel */
+  background: rgba(18, 18, 24, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03) inset,
+    0 8px 32px rgba(0,0,0,0.35);
+
+  transition: border-color 200ms ease;
 }
 
-.topBar {
-  height: 52px;
+.liveFeedColumn:hover,
+.intelligenceColumn:hover,
+.copilotColumn:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+   COLUMN HEADER STRIPS
+   ============================================================================ */
+.liveFeedHeader,
+.intelligenceHeader,
+.copilotHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 1.25rem;
-  background: rgba(8, 8, 20, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(12px);
   flex-shrink: 0;
-  z-index: 10;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 10px;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.brandLogo {
-  font-size: 1.3rem;
-}
-
-.brandName {
-  font-size: 1rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #5b8af5, #c47ef5);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.02em;
-}
-
-.brandTag {
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+/* Column title text */
+.liveFeedTitle,
+.intelligenceTitle,
+.copilotTitle {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  padding: 0.1rem 0.55rem;
-}
-
-.topActions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.exportGroup {
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 9px;
-  padding: 0.15rem;
-  gap: 0.15rem;
-}
-
-.exportGroup .actionBtn {
-  background: transparent;
-  border: none;
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.72rem;
-}
-
-.exportGroup .actionBtn:hover {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.btnIcon {
-  font-size: 0.85rem;
-}
-
-.actionBtn {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
 }
 
-.actionBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-}
-
-.settingsBtn {
-  border-color: rgba(91, 138, 245, 0.25);
-  color: var(--accent-blue);
-}
-
-.settingsBtn:hover {
-  background: rgba(91, 138, 245, 0.1);
-}
-
-.settingsBtnAlert {
-  border-color: rgba(245, 169, 74, 0.4);
-  color: #f5a94a;
-  animation: alertPulse 2s ease-in-out infinite;
-}
-
-@keyframes alertPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 169, 74, 0); }
-  50% { box-shadow: 0 0 0 4px rgba(245, 169, 74, 0.15); }
-}
-
-.alertDot {
+/* Coloured accent dot before each column title */
+.liveFeedTitle::before {
+  content: '';
+  display: inline-block;
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #f5a94a;
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  animation: pulse 1.5s ease-in-out infinite;
+  background: var(--success);
+  margin-right: 8px;
+  box-shadow: 0 0 8px var(--success);
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+/* Small live badge inside column header */
+.recBadge {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--danger);
+  animation: blink 1.2s ease infinite;
 }
 
-.columns {
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+
+.intelligenceTitle::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warning);
+  margin-right: 8px;
+  box-shadow: 0 0 8px var(--warning);
+}
+
+.copilotTitle::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--purple-accent);
+  margin-right: 8px;
+  box-shadow: 0 0 8px var(--purple-accent);
+}
+
+/* ============================================================================
+   COLUMN 1 — LIVE FEED
+   ============================================================================ */
+.liveFeedContent {
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* No padding — TranscriptPanel handles its own internal layout */
 }
 
-.col {
+
+/* ============================================================================
+   COLUMN 2 — INTELLIGENCE CENTER
+   ============================================================================ */
+.intelligencePriorities {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;        /* push tabs to the right */
+}
+
+.priorityTab {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 150ms ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--text-muted);
+  border-color: rgba(255,255,255,0.08);
+}
+
+.priorityTab.active {
+  background: var(--purple-accent);
+  color: #fff;
+  border-color: var(--purple-accent);
+  box-shadow: 0 0 12px rgba(147, 51, 234, 0.4);
+}
+
+.priorityTab:not(.active):hover {
+  color: var(--text-secondary);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.intelligenceContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* ============================================================================
+   COLUMN 3 — AI COPILOT
+   ============================================================================ */
+.copilotContent {
+  flex: 1;
+  overflow-y: hidden;       /* copilot uses internal scroll via ChatPanel */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+}
+
+/* Quick-action context pills */
+.quickContextPills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.quickContextPill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.12), rgba(59, 130, 246, 0.08));
+  border: 1px solid rgba(147, 51, 234, 0.25);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 150ms ease;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.quickContextPill:hover {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(59, 130, 246, 0.18));
+  border-color: var(--purple-accent);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(147, 51, 234, 0.25);
+}
+
+.activePill {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.35), rgba(59, 130, 246, 0.25)) !important;
+  border-color: var(--purple-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 0 14px rgba(147, 51, 234, 0.35);
+}
+
+
+/* Chat takes all remaining space */
+.copilotChatArea {
+  flex: 1;
   overflow: hidden;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ============================================================================
+   SCROLLBAR COSMETICS
+   ============================================================================ */
+.liveFeedContent::-webkit-scrollbar,
+.intelligenceContent::-webkit-scrollbar,
+.copilotChatArea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.liveFeedContent::-webkit-scrollbar-track,
+.intelligenceContent::-webkit-scrollbar-track,
+.copilotChatArea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.liveFeedContent::-webkit-scrollbar-thumb,
+.intelligenceContent::-webkit-scrollbar-thumb,
+.copilotChatArea::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.liveFeedContent::-webkit-scrollbar-thumb:hover,
+.intelligenceContent::-webkit-scrollbar-thumb:hover,
+.copilotChatArea::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ============================================================================
+   RESPONSIVE — tablet  (1100px – 900px) : keep 3 cols but narrow them
+   ============================================================================ */
+@media (max-width: 1100px) {
+  .dashboardContainer {
+    grid-template-columns: 280px 1fr 300px;
+    gap: 8px;
+    padding: 8px;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — small tablet  (< 900px) : 2 cols, copilot goes to row 4
+   ============================================================================ */
+@media (max-width: 900px) {
+  .dashboardContainer {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-areas:
+      "header  header"
+      "banner  banner"
+      "live    intel"
+      "copilot copilot"
+      "footer  footer";
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .copilotColumn {
+    max-height: 38vh;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE — mobile  (< 640px) : single column
+   ============================================================================ */
+@media (max-width: 640px) {
+  .dashboardContainer {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto auto;
+    grid-template-areas:
+      "header"
+      "banner"
+      "live"
+      "intel"
+      "copilot"
+      "footer";
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .liveFeedColumn,
+  .intelligenceColumn,
+  .copilotColumn {
+    min-height: 40vh;
+    max-height: 50vh;
+  }
 }

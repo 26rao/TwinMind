@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useSyncExternalStore, ReactNode } from 'react';
 import { SessionSettings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/lib/defaults';
 
@@ -13,34 +13,49 @@ interface SettingsContextValue {
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
+const listeners = new Set<() => void>();
+
+// Cache the last-read settings object so useSyncExternalStore gets a stable
+// reference between calls (avoids the "getSnapshot should be cached" infinite loop).
+let cachedSettings: SessionSettings | null = null;
+
+function readStoredSettings(): SessionSettings {
+  if (cachedSettings !== null) return cachedSettings;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<SessionSettings>;
+      cachedSettings = { ...DEFAULT_SETTINGS, ...parsed };
+      return cachedSettings;
+    }
+  } catch { /* ignore corrupt storage */ }
+  cachedSettings = DEFAULT_SETTINGS;
+  return cachedSettings;
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function notifySettingsChanged() {
+  // Invalidate cache so the next getSnapshot call re-reads from localStorage
+  cachedSettings = null;
+  listeners.forEach((listener) => listener());
+}
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SessionSettings>(() => {
-    // Lazy initializer: read from localStorage synchronously at mount time
-    // (safe here because useState initializer only runs once, not on every render)
-    try {
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored) as Partial<SessionSettings>;
-          return { ...DEFAULT_SETTINGS, ...parsed };
-        }
-      }
-    } catch { /* ignore corrupt storage */ }
-    return DEFAULT_SETTINGS;
-  });
+  const settings = useSyncExternalStore(subscribe, readStoredSettings, () => DEFAULT_SETTINGS);
 
   const updateSettings = (patch: Partial<SessionSettings>) => {
-    setSettings((prev) => {
-      const next = { ...prev, ...patch };
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-      return next;
-    });
+    const next = { ...settings, ...patch };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    notifySettingsChanged();
   };
 
   const resetSettings = () => {
-    setSettings(DEFAULT_SETTINGS);
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    notifySettingsChanged();
   };
 
   return (

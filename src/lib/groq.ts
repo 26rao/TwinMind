@@ -62,27 +62,63 @@ export async function generateSummary(
 
 // ─── Suggestions ──────────────────────────────────────────────────────────────
 
+export type SuggestionTier = 'HIGH' | 'MEDIUM' | 'INSIGHTS';
+
+const TIER_FOCUS: Record<SuggestionTier, string> = {
+  HIGH:
+    'Focus on: the single most urgent correction, the sharpest follow-up question, and the most critical insight — things that would change the direction of this conversation if raised right now.',
+  MEDIUM:
+    'Focus on: a factual nuance worth clarifying, a follow-up question that parks useful context for later, and a pattern or background insight the speakers may be missing.',
+  INSIGHTS:
+    'Focus on: meta-level observations — recurring contradictions, a definition being used inconsistently, a structural pattern in how this conversation is evolving, or a shift in tone/position.',
+};
+
 export async function fetchSuggestions(
   recentChunks: string,
   summary: string,
-  systemPrompt: string,
+  _systemPrompt: string,
   apiKey: string,
-  model: string
+  model: string,
+  tier: SuggestionTier = 'HIGH'
 ): Promise<{ suggestions: Omit<Suggestion, 'id' | 'timestamp'>[]; latencyMs: number }> {
   const startMs = Date.now();
 
-  // Split into system (persona + rules) and user (live context data)
-  // This gives models much better instruction-following for structured JSON output.
-  const systemContent = systemPrompt
-    .replace('{recentChunks}', '') // strip placeholders from system role
-    .replace('{summary}', '');
+  const systemContent = `You are ConvoIQ, a real-time meeting intelligence assistant. Your only job is to surface 3 high-signal cards from the transcript below — one per card type.
+
+## YOUR 3 CARD TYPES (use each exactly once per response)
+
+1. **fact-check** — Identify one specific factual claim in the transcript that is wrong, imprecise, or likely misunderstood. State the correction directly in the preview. If there is no verifiable factual claim to correct, write: "No factual corrections needed for this segment."
+
+2. **question** — Identify the single most important follow-up question the listener should ask the speaker, based only on what was actually said. Must be specific to real content in the transcript. If no question is needed, write: "No critical follow-up questions identified."
+
+3. **insight** — Extract the single most important learning or takeaway from this segment. Must be grounded in what was said, not general knowledge. If nothing significant was said, write: "No significant insight from this segment."
+
+## TIER GUIDANCE
+${TIER_FOCUS[tier]}
+
+## STRICT ANTI-HALLUCINATION RULES — THESE OVERRIDE EVERYTHING ELSE
+- NEVER invent names, people, roles, tasks, deadlines, owners, or organisations that are not explicitly mentioned in the transcript.
+- NEVER fabricate action items, decisions, or agreements that were not stated.
+- NEVER assume who said what if roles are not clear.
+- If a card type has nothing genuine to contribute for this segment, output the "No X" fallback above — do NOT invent content.
+- Every claim in your preview must be traceable to a specific sentence in the transcript.
+
+## OUTPUT FORMAT
+Return ONLY this JSON — no markdown, no prose, no explanation:
+{
+  "suggestions": [
+    { "type": "fact-check", "preview": "<correction or fallback>", "detailsHint": "<what to expand on>" },
+    { "type": "question",   "preview": "<specific question or fallback>", "detailsHint": "<why this matters>" },
+    { "type": "insight",    "preview": "<key takeaway or fallback>", "detailsHint": "<deeper angle>" }
+  ]
+}`;
 
   const userContent = [
     summary
       ? `<prior_summary>${summary}</prior_summary>`
       : '<prior_summary>No prior summary — early in conversation.</prior_summary>',
     `<recent_transcript>${recentChunks}</recent_transcript>`,
-    'Generate exactly 3 suggestions now. Return ONLY the JSON object.',
+    `Analyze the transcript above and return exactly 3 cards (fact-check, question, insight) for the ${tier} tier. Follow all anti-hallucination rules strictly.`,
   ].join('\n');
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -95,10 +131,10 @@ export async function fetchSuggestions(
       model,
       messages: [
         { role: 'system', content: systemContent },
-        { role: 'user', content: userContent },
+        { role: 'user',   content: userContent },
       ],
-      temperature: 0.7,
-      max_tokens: 1024,
+      temperature: 0.3,   // lower temp = fewer hallucinations
+      max_tokens: 800,
       response_format: { type: 'json_object' },
     }),
   });
@@ -112,19 +148,36 @@ export async function fetchSuggestions(
   const content = data.choices[0].message.content as string;
   const parsed = JSON.parse(content) as { suggestions: Omit<Suggestion, 'id' | 'timestamp'>[] };
 
-  // Hard-enforce exactly 3 suggestions
-  const suggestions = (parsed.suggestions ?? []).slice(0, 3);
+  // Ensure we always have all 3 types in the correct order
+  const VALID_TYPES: Suggestion['type'][] = ['fact-check', 'question', 'insight'];
+  const raw = (parsed.suggestions ?? []);
 
-  // Validate each has required fields; fill defaults if malformed
-  const validated = suggestions.map((s) => ({
-    type: (['question', 'fact-check', 'talking-point', 'answer', 'clarification'].includes(s.type)
-      ? s.type
-      : 'talking-point') as Suggestion['type'],
-    preview: s.preview?.trim() || 'See details for more information.',
-    detailsHint: s.detailsHint?.trim() || 'Expand on this topic',
-  }));
+  const validated = VALID_TYPES.map(expectedType => {
+    const found = raw.find(s => s.type === expectedType);
+    return {
+      type: expectedType,
+      preview: found?.preview?.trim() || `No ${expectedType} for this segment.`,
+      detailsHint: found?.detailsHint?.trim() || 'Nothing to expand on for this segment.',
+    };
+  });
 
   return { suggestions: validated, latencyMs: Date.now() - startMs };
+}
+
+
+/** Fetch all 3 tiers in parallel — call this on transcript changes */
+export async function fetchAllTierSuggestions(
+  recentChunks: string,
+  summary: string,
+  systemPrompt: string,
+  apiKey: string,
+  model: string
+): Promise<Record<SuggestionTier, { suggestions: Omit<Suggestion, 'id' | 'timestamp'>[]; latencyMs: number }>> {
+  const tiers: SuggestionTier[] = ['HIGH', 'MEDIUM', 'INSIGHTS'];
+  const results = await Promise.all(
+    tiers.map(tier => fetchSuggestions(recentChunks, summary, systemPrompt, apiKey, model, tier))
+  );
+  return Object.fromEntries(tiers.map((t, i) => [t, results[i]])) as Record<SuggestionTier, { suggestions: Omit<Suggestion, 'id' | 'timestamp'>[]; latencyMs: number }>;
 }
 
 // ─── Chat (streaming) ─────────────────────────────────────────────────────────

@@ -6,7 +6,7 @@ import { transcribeAudio } from '@/lib/groq';
 import { generateId } from '@/lib/utils';
 import { useSettings } from '@/context/SettingsContext';
 
-const CHUNK_INTERVAL_MS = 30_000; // 30 seconds
+const CHUNK_INTERVAL_MS = 10_000; // 10 seconds - optimized for real-time streaming
 
 interface UseAudioRecorderReturn {
   isRecording: boolean;
@@ -38,17 +38,30 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
   const chunkIndexRef = useRef(0);
 
   // ── Transcribe a blob in the background (parallel with recording) ──────────
+  // This is the core of the streaming pipeline: continuous, non-blocking transcription
   const processChunk = useCallback(
     async (audioBlob: Blob, chunkIndex: number) => {
       if (audioBlob.size < 1000) return; // Skip near-empty blobs
+      
       setPendingChunks((n) => n + 1);
       setIsTranscribing(true);
+      const startTime = performance.now(); // Track transcription latency
+      
       try {
         const text = await transcribeAudio(audioBlob, settings.groqApiKey, settings.transcriptionModel);
+        const latency = Math.round(performance.now() - startTime);
+        
         if (text.trim()) {
           setSegments((prev) => [
             ...prev,
-            { id: generateId(), text, timestamp: Date.now(), isFinal: true, chunkIndex },
+            { 
+              id: generateId(), 
+              text, 
+              timestamp: Date.now(), 
+              isFinal: true, 
+              chunkIndex,
+              latency, // Track latency for performance metrics
+            },
           ]);
         }
       } catch (err) {

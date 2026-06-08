@@ -54,7 +54,7 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
 
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>⚙️ Settings</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close settings">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close settings">[Close]</button>
         </div>
 
         {/* Tab bar */}

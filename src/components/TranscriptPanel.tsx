@@ -89,22 +89,14 @@ export function TranscriptPanel({
 
         <div className={styles.controls}>
           <button
-            id="mic-toggle-btn"
-            className={`${styles.micBtn} ${isRecording ? styles.micBtnStop : styles.micBtnStart}`}
-            onClick={isRecording ? onStop : onStart}
-            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-          >
-            {isRecording ? '⏹ Stop' : '● Start'}
-          </button>
-          <button
             id="transcript-refresh-btn"
             className={styles.iconBtn}
             onClick={onRefresh}
-            title="Manual refresh: finalize chunk + generate suggestions"
+            title="Finalize chunk + regenerate suggestions"
             aria-label="Refresh transcript and suggestions"
             disabled={segments.length === 0}
           >
-            ↻
+            ↻ Refresh
           </button>
           <button
             id="fact-check-toggle-btn"
@@ -113,7 +105,7 @@ export function TranscriptPanel({
             title="Toggle Live Fact-Check Mode"
             aria-label="Toggle Fact-Check Mode"
           >
-            🛡️
+            {factCheckMode ? '✓ Fact-Check ON' : 'Fact-Check'}
           </button>
           <button
             id="demo-mode-btn"
@@ -122,7 +114,7 @@ export function TranscriptPanel({
             title="Demo mode: inject sample transcripts"
             aria-label="Toggle demo mode"
           >
-            📝
+            Demo
           </button>
         </div>
 
@@ -175,7 +167,7 @@ export function TranscriptPanel({
 
       {error && (
         <div className={styles.errorBanner} role="alert">
-          ⚠ {error}
+          {error}
         </div>
       )}
 
@@ -195,13 +187,13 @@ export function TranscriptPanel({
               <span className={styles.time}>{formatTimestamp(seg.timestamp)}</span>
             </div>
             <p className={styles.text}>{seg.text}</p>
-            
+
             {seg.factChecks && seg.factChecks.length > 0 && (
               <div className={styles.factCheckRow}>
                 {seg.factChecks.map((fc, i) => (
                   <div key={i} className={`${styles.factBadge} ${styles[fc.status]}`} title={fc.explanation}>
-                    <span className={styles.statusIcon}>
-                      {fc.status === 'verified' ? '✅' : fc.status === 'uncertain' ? '⚠️' : '❌'}
+                    <span className={`${styles.statusLabel}`}>
+                      {fc.status === 'verified' ? 'Verified' : fc.status === 'uncertain' ? 'Uncertain' : 'Incorrect'}
                     </span>
                     <span className={styles.claimText}>{fc.claim}</span>
                   </div>

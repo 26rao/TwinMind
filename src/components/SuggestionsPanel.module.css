@@ -1,37 +1,35 @@
+/* ── SuggestionsPanel ──────────────────────────────────────────────────────── */
+
 .panel {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: rgba(12, 12, 24, 0.55);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
+  overflow: hidden;
 }
 
-/* ── Header ─────────────────────────────────────────────────────────── */
+/* ── Header ──────────────────────────────────────────────────────────────── */
 .header {
-  padding: 1rem 1.25rem 0.75rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   flex: 1;
   min-width: 0;
 }
 
-.icon { font-size: 1.1rem; flex-shrink: 0; }
-
 .title {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--text-secondary);
   margin: 0;
@@ -39,251 +37,139 @@
 }
 
 .batchCount {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  padding: 0.1rem 0.45rem;
+  padding: 0.08rem 0.4rem;
   white-space: nowrap;
 }
 
 .loadingPill {
-  font-size: 0.68rem;
-  color: var(--accent-purple);
-  background: rgba(124, 106, 245, 0.12);
-  border: 1px solid rgba(124, 106, 245, 0.28);
+  font-size: 0.64rem;
+  color: var(--accent-purple, #7c6af5);
+  background: rgba(124, 106, 245, 0.1);
+  border: 1px solid rgba(124, 106, 245, 0.25);
   border-radius: 999px;
-  padding: 0.15rem 0.5rem;
+  padding: 0.1rem 0.45rem;
   white-space: nowrap;
   animation: breathe 1.4s ease-in-out infinite;
 }
 
 @keyframes breathe {
-  0%, 100% { opacity: 0.65; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
 }
 
+/* ── Refresh button ──────────────────────────────────────────────────────── */
 .refreshBtn {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
+  gap: 0.3rem;
+  padding: 0.32rem 0.65rem;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   color: var(--text-secondary);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   white-space: nowrap;
   flex-shrink: 0;
   font-family: inherit;
+  letter-spacing: 0.02em;
 }
 
 .refreshBtn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
+  border-color: rgba(255,255,255,0.18);
 }
 
-.refreshBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.refreshBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .spinIcon {
   display: inline-block;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.75s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Error ───────────────────────────────────────────────────────────── */
+/* ── Error banner ────────────────────────────────────────────────────────── */
 .errorBanner {
-  margin: 0.625rem 1.25rem;
-  padding: 0.6rem 0.875rem;
+  margin: 0.5rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   background: rgba(239, 68, 68, 0.09);
-  border: 1px solid rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   border-radius: 8px;
   color: #fca5a5;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   flex-shrink: 0;
   line-height: 1.5;
 }
 
-/* ── Scroll area ─────────────────────────────────────────────────────── */
+/* ── Scroll area ─────────────────────────────────────────────────────────── */
 .scrollArea {
   flex: 1;
   overflow-y: auto;
-  padding: 0.875rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.65rem;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.09) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
-/* ── Batch containers ────────────────────────────────────────────────── */
-.batch {
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  animation: batchEnter 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
+.scrollArea::-webkit-scrollbar { width: 3px; }
+.scrollArea::-webkit-scrollbar-track { background: transparent; }
+.scrollArea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
-@keyframes batchEnter {
-  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.batchLatest {
-  border-color: rgba(91, 138, 245, 0.2);
-  box-shadow: 0 0 0 1px rgba(91, 138, 245, 0.08), 0 4px 20px rgba(0,0,0,0.2);
-}
-
-.batchOld {
-  border-color: rgba(255, 255, 255, 0.05);
-  opacity: 0.85;
-}
-
-/* ── Batch header ────────────────────────────────────────────────────── */
-.batchHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.55rem 0.875rem;
-  background: rgba(255, 255, 255, 0.025);
-  border: none;
-  width: 100%;
-  cursor: default;
-  text-align: left;
-  font-family: inherit;
-}
-
-.batchOld .batchHeader {
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.batchOld .batchHeader:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.batchHeaderLeft {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-/* Latest batch badge */
-.latestBadge {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--accent-blue);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.latestDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-blue);
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(0.8); }
-}
-
-/* Older batch badge */
-.oldBadge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  padding: 0.1rem 0.4rem;
-}
-
-.batchTime {
-  font-size: 0.63rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  opacity: 0.7;
-}
-
-.batchLatency {
-  font-size: 0.62rem;
-  color: var(--accent-green);
-  font-family: var(--font-mono);
-  opacity: 0.8;
-}
-
-.chevron {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  transition: transform 0.2s;
-}
-
-/* ── Card grid ───────────────────────────────────────────────────────── */
-.cardGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  /* Cards are flush inside the batch container */
-}
-
-.cardGrid > * + * {
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-/* ── Empty state ─────────────────────────────────────────────────────── */
+/* ── Empty state ─────────────────────────────────────────────────────────── */
 .emptyState {
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   line-height: 1.65;
-  padding: 2rem 0;
+  padding: 2.5rem 0;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .emptyIcon {
-  font-size: 2.5rem;
-  margin-bottom: 0.4rem;
-  opacity: 0.45;
+  font-size: 2.2rem;
+  margin-bottom: 0.35rem;
+  opacity: 0.4;
 }
 
 .emptyHint {
-  font-size: 0.76rem;
-  opacity: 0.6;
+  font-size: 0.73rem;
+  opacity: 0.55;
+  margin-top: 0.1rem;
 }
 
-/* ── Skeletons ───────────────────────────────────────────────────────── */
+/* ── Skeleton loading ────────────────────────────────────────────────────── */
 .skeletonGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .skeleton {
-  height: 82px;
+  height: 68px;
   border-radius: 10px;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.09) 50%,
-    rgba(255, 255, 255, 0.04) 100%
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.04) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
@@ -294,11 +180,131 @@
   100% { background-position: -200% 0; }
 }
 
-/* Loading overlay on top of existing batches */
+/* Loading overlay on top of existing cards */
 .loadingOverlay {
-  background: rgba(7, 7, 26, 0.5);
-  border-radius: 12px;
-  padding: 0.5rem;
+  border-radius: 10px;
+  padding: 6px;
+  background: rgba(7,7,26,0.45);
+  border: 1px solid rgba(91,138,245,0.12);
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(91, 138, 245, 0.15);
+}
+
+/* ── Latest batch ────────────────────────────────────────────────────────── */
+.latestBatch {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  animation: batchEnter 0.38s cubic-bezier(0.22,0.61,0.36,1);
+}
+
+@keyframes batchEnter {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Meta row above the latest 3 cards */
+.latestMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.25rem 0.1rem;
+}
+
+.latestDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-blue, #5b8af5);
+  animation: pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform: scale(1); }
+  50%     { opacity:0.4; transform: scale(0.8); }
+}
+
+.latestLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-blue, #5b8af5);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.batchTime {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+  opacity: 0.65;
+}
+
+.batchLatency {
+  font-size: 0.6rem;
+  color: var(--accent-green, #7ecb8b);
+  font-family: var(--font-mono, monospace);
+  opacity: 0.8;
+}
+
+/* ── Card stack (shared by latest + expanded old batches) ────────────────── */
+.cardStack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* ── Older batches ───────────────────────────────────────────────────────── */
+.oldBatch {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+
+.oldBatch:hover {
+  opacity: 0.9;
+}
+
+.oldBatchHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255,255,255,0.025);
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.oldBatchHeader:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.oldBadge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 0.08rem 0.35rem;
+}
+
+.chevron {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.oldBatch .cardStack {
+  padding: 0 6px 6px;
+  background: rgba(0,0,0,0.15);
+  gap: 4px;
 }

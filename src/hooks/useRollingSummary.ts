@@ -21,6 +21,7 @@ interface UseRollingSummaryReturn {
   summary: string;
   getRecentChunksText: (segments: TranscriptSegment[]) => string;
   updateSummary: (segments: TranscriptSegment[]) => Promise<void>;
+  seedSummary: (text: string) => void;   // inject context from an uploaded session
   isSummarizing: boolean;
   clearSummary: () => void;
 }
@@ -92,10 +93,16 @@ export function useRollingSummary(): UseRollingSummaryReturn {
     [settings]
   );
 
+  const seedSummary = useCallback((text: string) => {
+    setSummary(text);
+    // Reset the counter so the next transcript update appends to this seed
+    lastSummarizedCountRef.current = 0;
+  }, []);
+
   const clearSummary = useCallback(() => {
     setSummary('');
     lastSummarizedCountRef.current = 0;
   }, []);
 
-  return { summary, getRecentChunksText, updateSummary, isSummarizing, clearSummary };
+  return { summary, getRecentChunksText, updateSummary, seedSummary, isSummarizing, clearSummary };
 }
