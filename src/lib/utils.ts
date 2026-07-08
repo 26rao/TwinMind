@@ -159,6 +159,78 @@ export function exportToPDF(session: SessionExport): void {
   setTimeout(() => win.print(), 500);
 }
 
+export function downloadMarkdownFile(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 100);
+}
+
+export function downloadTextFile(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 100);
+}
+
+export function printMessageToPDF(renderedHtml: string, timestamp: number, role: string): void {
+  const formattedTime = new Date(timestamp).toLocaleString();
+  const title = `${role === 'user' ? 'User Message' : 'AI Copilot Response'} - ${formattedTime}`;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>${title}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+        .header { margin-bottom: 24px; border-bottom: 2px solid #7c3aed; padding-bottom: 12px; }
+        .title { font-size: 20px; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.05em; }
+        .meta { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        .content { font-size: 14px; color: #1f2937; }
+        .content p { margin-bottom: 12px; }
+        .content h2, .content h3, .content h4 { margin: 24px 0 8px; color: #111; }
+        .content ul, .content ol { margin: 12px 0 12px 20px; }
+        .content li { margin-bottom: 4px; }
+        .content code { font-family: monospace; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+        .content pre { background: #f3f4f6; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 16px 0; }
+        .content pre code { background: none; padding: 0; }
+        .content table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        .content th, .content td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
+        .content th { background: #f9fafb; font-weight: 600; }
+        @media print { body { padding: 20px; } }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">${role === 'user' ? 'User Message' : 'AI Copilot Response'}</div>
+        <div class="meta">Generated: ${formattedTime} | ConvoIQ Live Copilot</div>
+      </div>
+      <div class="content">
+        ${renderedHtml}
+      </div>
+    </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.write(htmlContent);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
+
 // ─── Misc Helpers ──────────────────────────────────────────────────────────────
 
 export function generateId(): string {

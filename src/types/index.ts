@@ -68,6 +68,7 @@ export interface SessionSettings {
   groqApiKey: string;
   llmModel: string;
   transcriptionModel: string;
+  promptVersion?: number;
   suggestionPrompt: string;
   detailedAnswerPrompt: string;
   chatSystemPrompt: string;

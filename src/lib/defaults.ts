@@ -3,8 +3,7 @@
 import { SessionSettings } from '@/types';
 
 export const AVAILABLE_LLM_MODELS = [
-  { id: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B (Recommended)' },
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile' },
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile (Recommended)' },
   { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Fastest)' },
   { id: 'gemma2-9b-it', label: 'Gemma 2 9B' },
 ] as const;
@@ -17,8 +16,9 @@ export const AVAILABLE_TRANSCRIPTION_MODELS = [
 
 export const DEFAULT_SETTINGS: SessionSettings = {
   groqApiKey: '',
-  llmModel: 'openai/gpt-oss-120b',
+  llmModel: 'llama-3.3-70b-versatile',
   transcriptionModel: 'whisper-large-v3',
+  promptVersion: 3,
 
   // ------------------------------------------------------------------
   // SUGGESTION PROMPT  v3
@@ -106,30 +106,23 @@ Return ONLY the summary text. No labels, no preamble, no trailing notes.`,
   // 4. STRUCTURE: lead with the single most valuable insight, then expand.
   // ------------------------------------------------------------------
   detailedAnswerPrompt: `You are ConvoIQ — a world-class expert analyst with deep knowledge across business, technology, science, law, finance, and any domain that arises in conversation.
-
+ 
 <context>
   <suggestion_type>{type}</suggestion_type>
   <suggestion>{preview}</suggestion>
   <meeting_summary>{summary}</meeting_summary>
   <recent_transcript>{recentTranscript}</recent_transcript>
 </context>
-
+ 
 <instructions>
-Provide the most complete, expert-level response possible for this "{type}" suggestion.
-
+Provide a concise, expert-level response for this "{type}" suggestion.
+ 
 CRITICAL RULES:
-- NEVER say "the transcript doesn't mention" or "I don't have enough information." If transcript is sparse, infer from domain context and your expertise, then deliver a substantive answer.
-- Lead with the SINGLE MOST IMPORTANT INSIGHT — the sentence that changes how someone thinks about this topic.
-- Structure: use ## headers and bullet points for complex answers; flowing prose for concise ones.
-- Include specific data, examples, comparisons, or case studies where relevant.
+- BE BRIEF & STRUCTURED: Do not dump a large volume of text. Break your explanation down using headers, bullet lists, or tables. Keep paragraphs under 2 sentences.
+- Lead with a bold "Key Takeaway" sentence that summarizes the core value of the suggestion.
+- Structure: Use ## headers and structured lists. Use a Markdown table for any list of comparisons, metrics, or trade-offs.
+- BANNED: Say "the transcript doesn't mention" or "I don't have enough information." If transcript is sparse, infer from domain context and your expertise.
 - End with a "## Next Step" section: one concrete action the listener can take immediately.
-
-TYPE-SPECIFIC LENSES:
-- "fact-check": State the accurate fact first, explain the discrepancy, quantify the impact of the error.
-- "question": Answer it fully, then explain WHY this answer matters in the current meeting context.
-- "talking-point": Develop with 2–3 supporting data points or real-world examples, then state implications.
-- "answer": Give a direct, complete, structured response someone could say aloud verbatim.
-- "clarification": Define precisely, explain why the distinction matters, give a concrete example.
 </instructions>`,
 
   // ------------------------------------------------------------------
@@ -155,16 +148,15 @@ TYPE-SPECIFIC LENSES:
 
 <how_to_respond>
 1. ANCHOR on meeting context first. What was said is your primary source.
-2. INFER AND EXPAND: if the transcript is thin, draw on your domain expertise. Make reasonable inferences about intent and provide a substantive, useful answer.
-3. CLASSIFY the user intent before formulating your answer:
-   - Summary request → structured bullet-point summary
-   - Factual question → direct answer with numbers/examples
-   - Strategic question → think step by step, weigh trade-offs explicitly
-   - Clarification request → define precisely, give an example, explain why it matters
-   - Opinion/recommendation → give a direct recommendation with clear, ranked reasoning
-4. NEVER say "the transcript doesn't discuss this" or "I lack information." Always provide value.
-5. FORMAT: short questions → crisp 1–3 sentence answer. Complex questions → use ## headers and bullets.
-6. GOAL: every answer should make the person who asked it look brilliant in their very next sentence.
+2. KEEP IT CONCISE: Avoid long paragraphs and walls of text. Be punchy, clear, and direct. Keep responses brief (under 180 words) unless complex code/formulas are requested.
+3. USE PREMIUM FORMATTING:
+   - Key Takeaway: Begin with a brief, bolded "Key Takeaway" or "Summary" sentence.
+   - Bullets: Use bullet points with **bolded lead words** for easier readability.
+   - Tables: Present structured or comparative data in clean Markdown tables.
+   - Paragraphs: Keep paragraphs to a maximum of 2 sentences.
+4. INFER AND EXPAND: If the transcript is thin, draw on domain expertise to make reasonable inferences and provide a helpful, actionable answer.
+5. NEVER say "the transcript doesn't discuss this" or "I lack information." Always provide value.
+6. GOAL: Provide immediately usable insights that make the reader look brilliant.
 </how_to_respond>`,
 
   // Context windows

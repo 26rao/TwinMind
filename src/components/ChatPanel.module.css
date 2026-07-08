@@ -368,3 +368,74 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.msgActions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.msgActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.msgActionBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--text-primary);
+}
+
+.msgActionBtn svg {
+  opacity: 0.7;
+}
+
+.msgActionBtn:hover svg {
+  opacity: 1;
+}
+
+/* Markdown Table support styling */
+.markdownContent :global(.table-wrapper) {
+  width: 100%;
+  overflow-x: auto;
+  margin: 0.8rem 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.markdownContent table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.markdownContent th {
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+  color: #c9a9f5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 0.75rem;
+}
+
+.markdownContent td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.markdownContent tr:last-child td {
+  border-bottom: none;
+}

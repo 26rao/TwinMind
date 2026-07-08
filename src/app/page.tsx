@@ -158,17 +158,26 @@ export default function Home() {
   const sessionDateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
   const handleExportJSON = useCallback(() => {
-    if (segments.length === 0) { alert('Nothing to export yet — start recording first.'); return; }
+    if (segments.length === 0 && messages.length === 0 && !summary) {
+      alert('Nothing to export yet — start recording or load a prior session.');
+      return;
+    }
     downloadJson(buildExport(), `meeting_report_${sessionDateStr}.json`);
   }, [segments, tierBatches, messages, summary, suggestionLatency, chatLatency]); // eslint-disable-line
 
   const handleExportMarkdown = useCallback(() => {
-    if (segments.length === 0) { alert('Nothing to export yet — start recording first.'); return; }
+    if (segments.length === 0 && messages.length === 0 && !summary) {
+      alert('Nothing to export yet — start recording or load a prior session.');
+      return;
+    }
     exportToMarkdown(buildExport());
   }, [segments, tierBatches, messages, summary, suggestionLatency, chatLatency]); // eslint-disable-line
 
   const handleExportPDF = useCallback(() => {
-    if (segments.length === 0) { alert('Nothing to export yet — start recording first.'); return; }
+    if (segments.length === 0 && messages.length === 0 && !summary) {
+      alert('Nothing to export yet — start recording or load a prior session.');
+      return;
+    }
     exportToPDF(buildExport());
   }, [segments, tierBatches, messages, summary, suggestionLatency, chatLatency]); // eslint-disable-line
 

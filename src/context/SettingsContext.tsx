@@ -19,17 +19,44 @@ const listeners = new Set<() => void>();
 // reference between calls (avoids the "getSnapshot should be cached" infinite loop).
 let cachedSettings: SessionSettings | null = null;
 
+const CURRENT_PROMPT_VERSION = 3;
+
 function readStoredSettings(): SessionSettings {
   if (cachedSettings !== null) return cachedSettings;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored) as Partial<SessionSettings>;
+      let parsed = JSON.parse(stored) as Partial<SessionSettings>;
+      let needsWrite = false;
+
+      // Migrate prompt version
+      if (!parsed.promptVersion || parsed.promptVersion < CURRENT_PROMPT_VERSION) {
+        parsed = {
+          ...parsed,
+          chatSystemPrompt: DEFAULT_SETTINGS.chatSystemPrompt,
+          detailedAnswerPrompt: DEFAULT_SETTINGS.detailedAnswerPrompt,
+          promptVersion: CURRENT_PROMPT_VERSION,
+        };
+        needsWrite = true;
+      }
+
+      // Upgrade rate-limited/deprecated model
+      if (!parsed.llmModel || parsed.llmModel === 'openai/gpt-oss-120b') {
+        parsed.llmModel = 'llama-3.3-70b-versatile';
+        needsWrite = true;
+      }
+
       cachedSettings = { ...DEFAULT_SETTINGS, ...parsed };
+
+      if (needsWrite) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedSettings));
+        } catch { /* ignore */ }
+      }
       return cachedSettings;
     }
   } catch { /* ignore corrupt storage */ }
-  cachedSettings = DEFAULT_SETTINGS;
+  cachedSettings = { ...DEFAULT_SETTINGS, promptVersion: CURRENT_PROMPT_VERSION };
   return cachedSettings;
 }
 

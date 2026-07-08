@@ -64,13 +64,30 @@ export async function generateSummary(
 
 export type SuggestionTier = 'HIGH' | 'MEDIUM' | 'INSIGHTS';
 
-const TIER_FOCUS: Record<SuggestionTier, string> = {
-  HIGH:
-    'Focus on: the single most urgent correction, the sharpest follow-up question, and the most critical insight — things that would change the direction of this conversation if raised right now.',
-  MEDIUM:
-    'Focus on: a factual nuance worth clarifying, a follow-up question that parks useful context for later, and a pattern or background insight the speakers may be missing.',
-  INSIGHTS:
-    'Focus on: meta-level observations — recurring contradictions, a definition being used inconsistently, a structural pattern in how this conversation is evolving, or a shift in tone/position.',
+const TIER_PROMPTS: Record<SuggestionTier, string> = {
+  HIGH: `You are ConvoIQ, a real-time meeting intelligence assistant. Your job is to surface 3 URGENT, HIGH-PRIORITY cards that require immediate attention:
+
+1. **fact-check** — Correct a critical factual error or misstatement in the transcript that could derail the meeting if not corrected immediately. (Fallback: "No factual corrections needed for this segment.")
+
+2. **question** — Ask a sharp, immediate follow-up question that exposes a gap or forces clear thinking right now. (Fallback: "No critical follow-up questions identified.")
+
+3. **insight** — Extract the most critical key takeaway that shifts the immediate direction of this discussion. (Fallback: "No significant insight from this segment.")`,
+
+  MEDIUM: `You are ConvoIQ, a real-time meeting intelligence assistant. Your job is to surface 3 MEDIUM-PRIORITY cards focused on clarification and context:
+
+1. **fact-check** — Highlight a factual nuance, assumption, or definition worth clarifying or double-checking for alignment. (Fallback: "No factual corrections needed for this segment.")
+
+2. **question** — Ask a strategic, context-gathering question that is useful to park or follow up on later. (Fallback: "No critical follow-up questions identified.")
+
+3. **insight** — Identify a useful pattern, background connection, or detail that the speakers may be overlooking. (Fallback: "No significant insight from this segment.")`,
+
+  INSIGHTS: `You are ConvoIQ, a real-time meeting intelligence assistant. Your job is to surface 3 META-INSIGHT cards focused on the conversation's structure and dynamics:
+
+1. **fact-check** — Identify any logical contradiction, shift in stance, or inconsistent terminology used by the speakers. (Fallback: "No factual corrections needed for this segment.")
+
+2. **question** — Ask a deep, meta-level question about team alignment, implicit assumptions, or conversational tone. (Fallback: "No critical follow-up questions identified.")
+
+3. **insight** — Extract a structural observation, such as a shift in negotiation position, tension, or a recurring theme. (Fallback: "No significant insight from this segment.")`,
 };
 
 export async function fetchSuggestions(
@@ -83,24 +100,13 @@ export async function fetchSuggestions(
 ): Promise<{ suggestions: Omit<Suggestion, 'id' | 'timestamp'>[]; latencyMs: number }> {
   const startMs = Date.now();
 
-  const systemContent = `You are ConvoIQ, a real-time meeting intelligence assistant. Your only job is to surface 3 high-signal cards from the transcript below — one per card type.
-
-## YOUR 3 CARD TYPES (use each exactly once per response)
-
-1. **fact-check** — Identify one specific factual claim in the transcript that is wrong, imprecise, or likely misunderstood. State the correction directly in the preview. If there is no verifiable factual claim to correct, write: "No factual corrections needed for this segment."
-
-2. **question** — Identify the single most important follow-up question the listener should ask the speaker, based only on what was actually said. Must be specific to real content in the transcript. If no question is needed, write: "No critical follow-up questions identified."
-
-3. **insight** — Extract the single most important learning or takeaway from this segment. Must be grounded in what was said, not general knowledge. If nothing significant was said, write: "No significant insight from this segment."
-
-## TIER GUIDANCE
-${TIER_FOCUS[tier]}
+  const systemContent = `${TIER_PROMPTS[tier]}
 
 ## STRICT ANTI-HALLUCINATION RULES — THESE OVERRIDE EVERYTHING ELSE
 - NEVER invent names, people, roles, tasks, deadlines, owners, or organisations that are not explicitly mentioned in the transcript.
 - NEVER fabricate action items, decisions, or agreements that were not stated.
 - NEVER assume who said what if roles are not clear.
-- If a card type has nothing genuine to contribute for this segment, output the "No X" fallback above — do NOT invent content.
+- If a card type has nothing genuine to contribute for this segment, output the exact fallback above — do NOT invent content.
 - Every claim in your preview must be traceable to a specific sentence in the transcript.
 
 ## OUTPUT FORMAT
