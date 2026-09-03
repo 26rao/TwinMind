@@ -3,21 +3,22 @@
 import { SessionSettings } from '@/types';
 
 export const AVAILABLE_LLM_MODELS = [
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile (Recommended)' },
-  { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Fastest)' },
-  { id: 'gemma2-9b-it', label: 'Gemma 2 9B' },
+  { id: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B (Ultra-Fast ~1000 T/s — Recommended)' },
+  { id: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B (High Reasoning ~500 T/s)' },
+  { id: 'groq/compound-mini', label: 'Groq Compound Mini (~450 T/s)' },
+  { id: 'groq/compound', label: 'Groq Compound (~450 T/s)' },
 ] as const;
 
 export const AVAILABLE_TRANSCRIPTION_MODELS = [
-  { id: 'whisper-large-v3', label: 'Whisper Large V3 (Best accuracy)' },
-  { id: 'whisper-large-v3-turbo', label: 'Whisper Large V3 Turbo (Faster)' },
-  { id: 'distil-whisper-large-v3-en', label: 'Distil Whisper (English only, fastest)' },
+  { id: 'whisper-large-v3-turbo', label: 'Whisper Large V3 Turbo (Fastest & Accurate — Recommended)' },
+  { id: 'whisper-large-v3', label: 'Whisper Large V3 (Standard)' },
+  { id: 'distil-whisper-large-v3-en', label: 'Distil Whisper (English only)' },
 ] as const;
 
 export const DEFAULT_SETTINGS: SessionSettings = {
   groqApiKey: '',
-  llmModel: 'llama-3.3-70b-versatile',
-  transcriptionModel: 'whisper-large-v3',
+  llmModel: 'openai/gpt-oss-20b',
+  transcriptionModel: 'whisper-large-v3-turbo',
   promptVersion: 3,
 
   // ------------------------------------------------------------------

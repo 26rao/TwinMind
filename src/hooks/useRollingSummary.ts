@@ -51,6 +51,8 @@ export function useRollingSummary(): UseRollingSummaryReturn {
     [settings.recentChunksForSuggestions]
   );
 
+  const seedContextRef = useRef<string>('');
+
   /**
    * Summarizes the "older" chunks (everything except the last N).
    * Runs only when we have new chunks to summarize.
@@ -72,7 +74,13 @@ export function useRollingSummary(): UseRollingSummaryReturn {
       if (olderIndices.length === 0) return;
       if (olderIndices.length === lastSummarizedCountRef.current) return; // nothing new to summarize
 
-      const olderText = olderIndices.map((i) => byChunk.get(i)!.join(' ')).join('\n\n');
+      const liveOlderText = olderIndices.map((i) => byChunk.get(i)!.join(' ')).join('\n\n');
+      const olderText = [
+        seedContextRef.current ? `[PRIOR CONTEXT / DOCUMENT]:\n${seedContextRef.current}` : '',
+        liveOlderText,
+      ]
+        .filter(Boolean)
+        .join('\n\n');
 
       setIsSummarizing(true);
       try {
@@ -94,12 +102,14 @@ export function useRollingSummary(): UseRollingSummaryReturn {
   );
 
   const seedSummary = useCallback((text: string) => {
+    seedContextRef.current = text;
     setSummary(text);
     // Reset the counter so the next transcript update appends to this seed
     lastSummarizedCountRef.current = 0;
   }, []);
 
   const clearSummary = useCallback(() => {
+    seedContextRef.current = '';
     setSummary('');
     lastSummarizedCountRef.current = 0;
   }, []);

@@ -61,15 +61,18 @@ Downloads trigger only when there is recorded content:
 - **Markdown** → `meeting_report_YYYY-MM-DD.md`
 - **PDF** → browser print dialog with styled HTML
 
-### 📥 Upload Previous Session
-Load context before starting a new session. The uploader accepts:
-- ConvoIQ session exports (`meeting_report_*.json`)
-- Any JSON file with at least one of: `transcript`, `text`, `content`, `notes`, `summary`, `rollingSummary`, `chatHistory`
-- Hand-crafted JSON notes — the uploader normalises whatever structure it finds
+### 📥 Upload PDF & Previous Session Context
+Load context before or during a session via the **📂 Load Doc** button. The uploader accepts:
+- **PDF Documents** (`.pdf`) — agendas, meeting minutes, slides, and briefing sheets
+- **ConvoIQ session exports** (`meeting_report_*.json`)
+- **Plain Text / Markdown** (`.txt`, `.md`) — raw notes, transcripts, or summaries
+- **Custom JSON notes** with any of: `transcript`, `text`, `content`, `notes`, `summary`, `rollingSummary`, `chatHistory`
 
-When a file is loaded, context is injected into:
-1. The **rolling summary** — so all 3 suggestion tiers see it immediately
-2. The **AI Copilot chat** — so the chat can answer questions about the prior session
+When a file is loaded:
+1. Document text is extracted client-side (via PDF.js / stream decoder)
+2. Saved in `sessionStorage` for session-wide persistence
+3. Injected into the **rolling summary** — so all 3 real-time suggestion tiers reference the document throughout the meeting
+4. Injected into the **AI Copilot chat** — enabling instant answers and follow-ups on the uploaded content
 
 ### 👤 Login & Session Persistence
 - Name-based login stored in `localStorage`
@@ -112,7 +115,7 @@ When a file is loaded, context is injected into:
 | Styling | Vanilla CSS Modules + design tokens |
 | Layout | `100vh` CSS Grid — 3 fixed columns |
 | Transcription | Groq Whisper (Large V3 / Turbo / Distil) |
-| LLM | Groq (configurable: OSS 120B, Llama 70B, Gemma, etc.) |
+| LLM | Groq (GPT-OSS 20B, GPT-OSS 120B, Groq Compound) |
 | Audio capture | `MediaRecorder` API — 10s chunks |
 | State | React hooks + `localStorage` |
 | Fonts | Outfit (display) + JetBrains Mono (timestamps) |
@@ -145,7 +148,7 @@ Click ⚙ in the top-right header to open Settings:
 | Setting | Default | Notes |
 |---|---|---|
 | Groq API Key | *(required)* | Get one at console.groq.com |
-| LLM Model | `openai/gpt-oss-120b` | Any Groq-supported chat model |
+| LLM Model | `openai/gpt-oss-20b` | High throughput (~1000 tps) & free tier friendly |
 | Transcription Model | `whisper-large-v3-turbo` | Or `whisper-large-v3`, `distil-whisper-large-v3-en` |
 | Auto-refresh interval | 30s | How often suggestions regenerate |
 | Recent chunks for suggestions | 3 | Raw chunks sent to suggestion prompt |
@@ -449,7 +452,7 @@ The **LatencyBar** component displays these metrics at the bottom of the UI, hel
 Edit directly in the UI without restarting:
 
 - **Groq API Key**: Required
-- **LLM Model**: Switch between GPT-OSS 120B, Llama, or Gemma
+- **LLM Model**: Switch between GPT-OSS 20B (Ultra-Fast), GPT-OSS 120B (High Reasoning), or Groq Compound
 - **Transcription Model**: Choose accuracy (Whisper V3) vs. speed (Turbo, Distil)
 - **Custom Prompts**: Edit suggestion, summary, fact-check, and report prompts
 - **Context Windows**: Adjust how much history is used for each operation

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useSyncExternalStore, ReactNode } from 'react';
 import { SessionSettings } from '@/types';
-import { DEFAULT_SETTINGS } from '@/lib/defaults';
+import { DEFAULT_SETTINGS, AVAILABLE_LLM_MODELS, AVAILABLE_TRANSCRIPTION_MODELS } from '@/lib/defaults';
 
 const STORAGE_KEY = 'convoiq_settings_v1';
 
@@ -40,9 +40,15 @@ function readStoredSettings(): SessionSettings {
         needsWrite = true;
       }
 
-      // Upgrade rate-limited/deprecated model
-      if (!parsed.llmModel || parsed.llmModel === 'openai/gpt-oss-120b') {
-        parsed.llmModel = 'llama-3.3-70b-versatile';
+      const isValidLlm = AVAILABLE_LLM_MODELS.some((m) => m.id === parsed.llmModel);
+      const isValidTrans = AVAILABLE_TRANSCRIPTION_MODELS.some((m) => m.id === parsed.transcriptionModel);
+
+      if (!isValidLlm) {
+        parsed.llmModel = DEFAULT_SETTINGS.llmModel;
+        needsWrite = true;
+      }
+      if (!isValidTrans) {
+        parsed.transcriptionModel = DEFAULT_SETTINGS.transcriptionModel;
         needsWrite = true;
       }
 

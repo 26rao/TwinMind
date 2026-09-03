@@ -67,7 +67,20 @@ export default function Home() {
 
   const handleLoadSession = useCallback((session: SessionExport) => {
     setUploadedContext(session);
+    try {
+      sessionStorage.setItem('convoiq_active_uploaded_session', JSON.stringify(session));
+    } catch { /* ignore storage quota */ }
     setUploadOpen(false);
+  }, []);
+
+  // Restore uploaded context from sessionStorage on mount if present
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('convoiq_active_uploaded_session');
+      if (saved) {
+        setUploadedContext(JSON.parse(saved) as SessionExport);
+      }
+    } catch { /* ignore */ }
   }, []);
 
   /* ── Settings modal ───────────────────────────────────────────────────── */
@@ -107,23 +120,37 @@ export default function Home() {
   useEffect(() => {
     if (!uploadedContext) return;
 
-    // 1. Seed the rolling summary so ALL suggestion tiers see the prior session
-    if (uploadedContext.rollingSummary) {
-      const priorTranscriptExcerpt = uploadedContext.transcript
-        .slice(-5)
-        .map(t => t.text)
-        .join('\n');
+    const summaryText =
+      uploadedContext.rollingSummary ||
+      uploadedContext.transcript.map(t => t.text).join('\n').slice(0, 2000);
+
+    const priorTranscriptExcerpt = uploadedContext.transcript
+      .slice(-6)
+      .map(t => t.text)
+      .join('\n');
+
+    if (summaryText || priorTranscriptExcerpt) {
       const seededSummary = [
-        '[PRIOR SESSION CONTEXT]',
-        uploadedContext.rollingSummary,
-        priorTranscriptExcerpt ? `\nLast discussed:\n${priorTranscriptExcerpt}` : '',
-      ].join('\n');
+        '[UPLOADED DOCUMENT / PRIOR CONTEXT]',
+        summaryText,
+        priorTranscriptExcerpt && priorTranscriptExcerpt !== summaryText
+          ? `\nKey Sections / Discussion:\n${priorTranscriptExcerpt}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+
       seedSummary(seededSummary);
 
-      // 2. Also inform the chat copilot about the prior session
+      // Inform the chat assistant about the loaded PDF/session context
       sendMessage(
-        `[Previous session context loaded]\n\nSummary: ${uploadedContext.rollingSummary}\n\nTranscript excerpt:\n${priorTranscriptExcerpt}`,
-        [], seededSummary,
+        `[Document / Prior Session Loaded]\n\n${summaryText}${
+          priorTranscriptExcerpt && priorTranscriptExcerpt !== summaryText
+            ? `\n\nKey Excerpts:\n${priorTranscriptExcerpt}`
+            : ''
+        }`,
+        [],
+        seededSummary
       );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -281,6 +308,7 @@ export default function Home() {
             onStartRecording={startRecording}
             onStopRecording={handleStopRecording}
             onSettings={openSettings}
+            onUploadDoc={() => setUploadOpen(true)}
             onExportJSON={handleExportJSON}
             onExportMarkdown={handleExportMarkdown}
             onExportPDF={handleExportPDF}
@@ -390,7 +418,7 @@ export default function Home() {
             factCheckLatency={250}
             chatLatency={chatLatency.lastChatFirstTokenMs || 0}
             tokenThroughput={218}
-            engineModel={settings.llmModel || 'GPT-OSS 120B'}
+            engineModel={settings.llmModel || 'GPT-OSS 20B'}
           />
         </div>
       </div>

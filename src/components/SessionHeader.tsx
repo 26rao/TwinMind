@@ -10,6 +10,7 @@ interface SessionHeaderProps {
   onStartRecording: () => Promise<void>;
   onStopRecording: () => void;
   onSettings: () => void;
+  onUploadDoc?: () => void;
   onExportJSON: () => void;
   onExportMarkdown: () => void;
   onExportPDF: () => void;
@@ -23,6 +24,7 @@ export const SessionHeader: FC<SessionHeaderProps> = ({
   onStartRecording,
   onStopRecording,
   onSettings,
+  onUploadDoc,
   onExportJSON,
   onExportMarkdown,
   onExportPDF,
@@ -96,6 +98,18 @@ export const SessionHeader: FC<SessionHeaderProps> = ({
               title="Stop recording"
             >
               ⏹ STOP
+            </button>
+          )}
+
+          {/* Load Context / PDF */}
+          {onUploadDoc && (
+            <button
+              className={styles.iconBtn}
+              onClick={onUploadDoc}
+              title="Upload PDF or previous session context"
+              aria-label="Upload PDF / Context"
+            >
+              📂 Load Doc
             </button>
           )}
 
