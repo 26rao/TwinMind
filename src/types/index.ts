@@ -66,6 +66,8 @@ export interface LatencyMetrics {
 
 export interface SessionSettings {
   groqApiKey: string;
+  geminiApiKey: string;
+  llmProvider: 'gemini' | 'groq';
   llmModel: string;
   transcriptionModel: string;
   promptVersion?: number;

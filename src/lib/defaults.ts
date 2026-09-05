@@ -3,10 +3,10 @@
 import { SessionSettings } from '@/types';
 
 export const AVAILABLE_LLM_MODELS = [
-  { id: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B (Ultra-Fast ~1000 T/s — Recommended)' },
-  { id: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B (High Reasoning ~500 T/s)' },
-  { id: 'groq/compound-mini', label: 'Groq Compound Mini (~450 T/s)' },
-  { id: 'groq/compound', label: 'Groq Compound (~450 T/s)' },
+  { id: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash (Recommended — 1,000,000 TPM Free Tier)' },
+  { id: 'openai/gpt-oss-20b', label: 'Groq: GPT-OSS 20B (8k TPM free limit)' },
+  { id: 'qwen/qwen3.6-27b', label: 'Groq: Qwen 3.6 27B' },
+  { id: 'openai/gpt-oss-120b', label: 'Groq: GPT-OSS 120B' },
 ] as const;
 
 export const AVAILABLE_TRANSCRIPTION_MODELS = [
@@ -17,9 +17,11 @@ export const AVAILABLE_TRANSCRIPTION_MODELS = [
 
 export const DEFAULT_SETTINGS: SessionSettings = {
   groqApiKey: '',
-  llmModel: 'openai/gpt-oss-20b',
+  geminiApiKey: '',
+  llmProvider: 'gemini',
+  llmModel: 'gemini-3.6-flash',
   transcriptionModel: 'whisper-large-v3-turbo',
-  promptVersion: 3,
+  promptVersion: 6,
 
   // ------------------------------------------------------------------
   // SUGGESTION PROMPT  v3

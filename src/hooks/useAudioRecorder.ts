@@ -3,10 +3,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { TranscriptSegment } from '@/types';
 import { transcribeAudio } from '@/lib/groq';
-import { generateId } from '@/lib/utils';
+import { generateId, isWhisperHallucination } from '@/lib/utils';
 import { useSettings } from '@/context/SettingsContext';
 
-const CHUNK_INTERVAL_MS = 10_000; // 10 seconds - optimized for real-time streaming
+
+const CHUNK_INTERVAL_MS = 3_000; // 3 seconds - fast streaming transcription (3x faster than 10s)
 
 interface UseAudioRecorderReturn {
   isRecording: boolean;
@@ -51,7 +52,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         const text = await transcribeAudio(audioBlob, settings.groqApiKey, settings.transcriptionModel);
         const latency = Math.round(performance.now() - startTime);
         
-        if (text.trim()) {
+        if (text && text.trim() && !isWhisperHallucination(text)) {
           setSegments((prev) => [
             ...prev,
             { 

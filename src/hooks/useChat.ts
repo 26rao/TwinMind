@@ -54,8 +54,8 @@ export function useChat(): UseChatReturn {
 
   const sendMessage = useCallback(
     async (content: string, segments: TranscriptSegment[], summary: string) => {
-      if (!settings.groqApiKey) {
-        setError('Groq API key not set — open ⚙ Settings.');
+      if (!settings.groqApiKey && !settings.geminiApiKey) {
+        setError('API key not set — open ⚙ Settings.');
         return;
       }
 
@@ -112,7 +112,8 @@ export function useChat(): UseChatReturn {
                 )
               );
             }
-          }
+          },
+          settings.geminiApiKey
         );
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Chat error');
@@ -124,8 +125,8 @@ export function useChat(): UseChatReturn {
 
   const expandSuggestion = useCallback(
     async (suggestion: Suggestion, segments: TranscriptSegment[], summary: string) => {
-      if (!settings.groqApiKey) {
-        setError('Groq API key not set — open ⚙ Settings.');
+      if (!settings.groqApiKey && !settings.geminiApiKey) {
+        setError('API key not set — open ⚙ Settings.');
         return;
       }
 
@@ -182,10 +183,11 @@ export function useChat(): UseChatReturn {
                 )
               );
             }
-          }
+          },
+          settings.geminiApiKey
         );
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Expansion error');
+        setError(err instanceof Error ? err.message : 'Detailed answer error');
         setIsStreaming(false);
       }
     },

@@ -47,14 +47,14 @@ function getPdfJs(): Promise<unknown> {
 function fallbackPdfTextExtract(buffer: ArrayBuffer): string {
   const text = new TextDecoder('utf-8', { fatal: false }).decode(new Uint8Array(buffer));
   const matches: string[] = [];
-  const regex = /\(([^)\\]*(?:\\.[^)\\]*)*\)\s*Tj|\[([^\]]*)\]\s*TJ/g;
+  const regex = new RegExp('\\(([^)\\\\]*(?:\\\\.[^)\\\\]*)*\\)\\s*Tj|\\[([^\\]]*)\\]\\s*TJ', 'g');
   let match;
 
   while ((match = regex.exec(text)) !== null) {
     if (match[1]) {
       matches.push(match[1]);
     } else if (match[2]) {
-      const innerMatches = match[2].match(/\(([^)\\]*(?:\\.[^)\\]*)*\)/g);
+      const innerMatches = match[2].match(new RegExp('\\(([^)\\\\]*(?:\\\\.[^)\\\\]*)*\\)', 'g'));
       if (innerMatches) {
         matches.push(innerMatches.map((m) => m.slice(1, -1)).join(' '));
       }

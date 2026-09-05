@@ -59,7 +59,7 @@ export function useRollingSummary(): UseRollingSummaryReturn {
    */
   const updateSummary = useCallback(
     async (segments: TranscriptSegment[]): Promise<void> => {
-      if (!settings.groqApiKey) return;
+      if (!settings.groqApiKey && !settings.geminiApiKey) return;
 
       const n = settings.recentChunksForSuggestions;
       const byChunk = new Map<number, string[]>();
@@ -88,7 +88,8 @@ export function useRollingSummary(): UseRollingSummaryReturn {
           olderText,
           settings.summaryPrompt,
           settings.groqApiKey,
-          settings.llmModel
+          settings.llmModel,
+          settings.geminiApiKey
         );
         setSummary(newSummary);
         lastSummarizedCountRef.current = olderIndices.length;

@@ -2,8 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { SuggestionBatch, Suggestion, TranscriptSegment, LatencyMetrics } from '@/types';
-import { fetchSuggestions, fetchAllTierSuggestions, SuggestionTier } from '@/lib/groq';
-import { generateId } from '@/lib/utils';
+import { fetchAllTierSuggestions, SuggestionTier } from '@/lib/groq';
+import { generateId, hasSubstantiveSpeech } from '@/lib/utils';
 import { useSettings } from '@/context/SettingsContext';
 
 interface TierBatches {
@@ -49,6 +49,8 @@ export function useSuggestions(
   const lastRefreshHashRef = useRef<string>('');
   // Prevent concurrent refreshes
   const refreshInFlightRef = useRef(false);
+  const lastRefreshTimeRef = useRef<number>(0);
+  const lastSegmentCountRef = useRef<number>(0);
 
   const makeBatch = useCallback(
     (
@@ -71,12 +73,12 @@ export function useSuggestions(
 
   const refresh = useCallback(
     async (currentSegments: TranscriptSegment[], currentSummary: string, recentText: string) => {
-      if (!settings.groqApiKey) {
-        setError('Groq API key not set — open ⚙ Settings.');
+      if (!settings.groqApiKey && !settings.geminiApiKey) {
+        setError('API key not set — open ⚙ Settings.');
         return;
       }
-      if (!recentText.trim()) {
-        setError('No transcript yet. Start speaking or add demo text.');
+      // If there is no substantive speech yet, stay silent (do not error, do not hallucinate random cards)
+      if (!hasSubstantiveSpeech(recentText)) {
         return;
       }
 
@@ -86,48 +88,41 @@ export function useSuggestions(
       if (refreshInFlightRef.current) return;
 
       lastRefreshHashRef.current = hash;
+      lastRefreshTimeRef.current = Date.now();
       refreshInFlightRef.current = true;
       setError(null);
-
-      // Mark all tiers loading
       setTierLoading({ HIGH: true, MEDIUM: true, INSIGHTS: true });
 
       const tiers: SuggestionTier[] = ['HIGH', 'MEDIUM', 'INSIGHTS'];
 
       try {
-        // Fire all 3 API calls in parallel
-        const results = await Promise.allSettled(
-          tiers.map(tier =>
-            fetchSuggestions(
-              recentText, currentSummary,
-              settings.suggestionPrompt, settings.groqApiKey, settings.llmModel,
-              tier
-            ).then(res => ({ tier, res }))
-          )
+        const tierResults = await fetchAllTierSuggestions(
+          recentText,
+          currentSummary,
+          settings.suggestionPrompt,
+          settings.groqApiKey,
+          settings.llmModel,
+          settings.geminiApiKey
         );
 
         let maxLatency = 0;
 
-        setTierBatches(prev => {
+        setTierBatches((prev) => {
           const next = { ...prev };
-          results.forEach((result, i) => {
-            const tier = tiers[i];
-            setTierLoading(l => ({ ...l, [tier]: false }));
-            if (result.status === 'fulfilled') {
-              const { res } = result.value;
-              maxLatency = Math.max(maxLatency, res.latencyMs);
-              const batch = makeBatch(res.suggestions, recentText, res.latencyMs);
+          for (const tier of tiers) {
+            const data = tierResults[tier];
+            if (data && data.suggestions.length > 0) {
+              maxLatency = Math.max(maxLatency, data.latencyMs);
+              const batch = makeBatch(data.suggestions, recentText, data.latencyMs);
               next[tier] = [batch, ...prev[tier]];
-            } else {
-              console.error(`[${tier}] suggestion failed:`, result.reason);
             }
-          });
+          }
           return next;
         });
 
         if (maxLatency > 0) {
           setLastLatencyMs(maxLatency);
-          setAllLatencies(prev => [...prev, maxLatency]);
+          setAllLatencies((prev) => [...prev, maxLatency]);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate suggestions');
@@ -141,27 +136,27 @@ export function useSuggestions(
     [settings, makeBatch]
   );
 
-  // ── Auto-refresh when a new segment arrives ──────────────────────────────────
-  const lastSegmentCountRef = useRef<number>(0);
-
+  // ── Auto-refresh cadence (accumulates new speech chunks) ───────────────────
   useEffect(() => {
     if (!isRecording) return;
-    if (segments.length === lastSegmentCountRef.current) return;
-    lastSegmentCountRef.current = segments.length;
+    if (segments.length === 0) return;
+
+    const accumulatedCount = segments.length - lastSegmentCountRef.current;
+    if (accumulatedCount <= 0) return;
 
     const recentText = getRecentChunksText(segments);
+    if (!hasSubstantiveSpeech(recentText)) return;
+
+    const timeSinceLast = Date.now() - lastRefreshTimeRef.current;
+
+    // First segment with real speech generates immediately, then accumulate ~4 chunks (~12s)
+    if (lastRefreshTimeRef.current > 0 && accumulatedCount < 4 && timeSinceLast < 12_000) {
+      return;
+    }
+
+    lastSegmentCountRef.current = segments.length;
     refresh(segments, summary, recentText);
   }, [segments, isRecording, summary, refresh, getRecentChunksText]);
-
-  // ── Fallback timer (catches long silences between transcriptions) ─────────────
-  useEffect(() => {
-    if (!isRecording) return;
-    const timer = setInterval(() => {
-      const recentText = getRecentChunksText(segments);
-      refresh(segments, summary, recentText);
-    }, settings.autoRefreshInterval * 1000);
-    return () => clearInterval(timer);
-  }, [isRecording, segments, summary, refresh, getRecentChunksText, settings.autoRefreshInterval]);
 
   const clearBatches = useCallback(() => {
     setTierBatches(EMPTY_TIER_BATCHES);
@@ -170,6 +165,7 @@ export function useSuggestions(
     setLastLatencyMs(null);
     setAllLatencies([]);
     lastRefreshHashRef.current = '';
+    lastSegmentCountRef.current = 0;
   }, []);
 
   const avgLatency = allLatencies.length
@@ -178,7 +174,6 @@ export function useSuggestions(
 
   const isLoading = Object.values(tierLoading).some(Boolean);
 
-  // Legacy `batches` compat — expose the HIGH tier batches as default
   return {
     tierBatches,
     tierLoading,
@@ -192,3 +187,4 @@ export function useSuggestions(
     clearBatches,
   };
 }
+

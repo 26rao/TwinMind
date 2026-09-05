@@ -19,7 +19,7 @@ const listeners = new Set<() => void>();
 // reference between calls (avoids the "getSnapshot should be cached" infinite loop).
 let cachedSettings: SessionSettings | null = null;
 
-const CURRENT_PROMPT_VERSION = 3;
+const CURRENT_PROMPT_VERSION = 6;
 
 function readStoredSettings(): SessionSettings {
   if (cachedSettings !== null) return cachedSettings;
@@ -29,10 +29,13 @@ function readStoredSettings(): SessionSettings {
       let parsed = JSON.parse(stored) as Partial<SessionSettings>;
       let needsWrite = false;
 
-      // Migrate prompt version
+      // Migrate prompt version / legacy models to Gemini 3.6 Flash
       if (!parsed.promptVersion || parsed.promptVersion < CURRENT_PROMPT_VERSION) {
         parsed = {
           ...parsed,
+          geminiApiKey: parsed.geminiApiKey || '',
+          llmProvider: parsed.llmProvider || 'gemini',
+          llmModel: DEFAULT_SETTINGS.llmModel,
           chatSystemPrompt: DEFAULT_SETTINGS.chatSystemPrompt,
           detailedAnswerPrompt: DEFAULT_SETTINGS.detailedAnswerPrompt,
           promptVersion: CURRENT_PROMPT_VERSION,

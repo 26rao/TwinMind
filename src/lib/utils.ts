@@ -256,3 +256,107 @@ export function formatLatency(ms: number | null): string {
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(1)}s`;
 }
+
+// ─── Whisper Hallucination & Speech Validation ─────────────────────────────────
+
+const KNOWN_WHISPER_HALLUCINATIONS = new Set([
+  'thank you',
+  'thank you very much',
+  'thank you so much',
+  'thank you all',
+  'thanks',
+  'thanks a lot',
+  'thanks for watching',
+  'thanks for listening',
+  'thanks for watching and ill see you next time',
+  'thanks for watching and see you next time',
+  'thanks for watching please subscribe',
+  'please subscribe',
+  'subscribe to our channel',
+  'subscribe to the channel',
+  'subscribe',
+  'like and subscribe',
+  'subtitles by',
+  'subtitles by the amaraorg community',
+  'amaraorg',
+  'transcribed by',
+  'transcription by',
+  'translated by',
+  'bye',
+  'bye bye',
+  'goodbye',
+  'see you next time',
+  'see you soon',
+  'see you in the next video',
+  'you',
+  'silence',
+  'music',
+  'applause',
+  'laughter',
+  'cheering',
+  'cough',
+  'throat clearing',
+  'blank audio',
+]);
+
+/**
+ * Detects whether a transcription chunk is a Whisper silence hallucination.
+ * Common in Whisper Large V3 when processing silent or low-volume audio.
+ */
+export function isWhisperHallucination(text: string): boolean {
+  if (!text) return true;
+  const raw = text.trim();
+  if (!raw) return true;
+
+  // Stripped of outer brackets, quotes, braces
+  const unbracketed = raw.replace(/^[[({\s"']+|[\])}\s"']+$/g, '').trim();
+  if (!unbracketed) return true;
+
+  // Normalized lower-case alphanumeric
+  const clean = unbracketed
+    .toLowerCase()
+    .replace(/[.,!?:;…\-–—"'`~^()[\]{}*#_/\\|<>@$%+=]/g, '')
+    .trim();
+
+  // If fewer than 2 characters after stripping punctuation
+  if (clean.length < 2) return true;
+
+  if (KNOWN_WHISPER_HALLUCINATIONS.has(clean)) return true;
+
+  // Repetitions of common outro phrases
+  if (/^(thank\s+you\s*)+$/i.test(clean)) return true;
+  if (/^(thanks\s*)+$/i.test(clean)) return true;
+  if (/^(you\s*)+$/i.test(clean)) return true;
+  if (/^(bye\s*)+$/i.test(clean)) return true;
+
+  // Subtitle / transcription credits
+  if (
+    clean.includes('subtitles by') ||
+    clean.includes('amaraorg') ||
+    clean.includes('transcribed by') ||
+    clean.includes('transcription by') ||
+    clean.includes('translated by')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks if text contains substantive speech (at least 4 meaningful words)
+ * to avoid generating AI suggestions on silence, single words, or trivial fillers.
+ */
+export function hasSubstantiveSpeech(text: string): boolean {
+  if (!text) return false;
+  if (isWhisperHallucination(text)) return false;
+
+  const words = text
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^\w]/g, ''))
+    .filter((w) => w.length > 1);
+
+  return words.length >= 4;
+}
+

@@ -147,10 +147,11 @@ Click ⚙ in the top-right header to open Settings:
 
 | Setting | Default | Notes |
 |---|---|---|
-| Groq API Key | *(required)* | Get one at console.groq.com |
-| LLM Model | `openai/gpt-oss-20b` | High throughput (~1000 tps) & free tier friendly |
-| Transcription Model | `whisper-large-v3-turbo` | Or `whisper-large-v3`, `distil-whisper-large-v3-en` |
-| Auto-refresh interval | 30s | How often suggestions regenerate |
+| Gemini API Key | *(recommended)* | Free key at aistudio.google.com/apikey (1,000,000 TPM limit) |
+| Groq API Key | *(required for mic)* | Get one at console.groq.com (powers Whisper Large V3 Turbo) |
+| LLM Model | `gemini-2.5-flash` | Ultra-fast & high context with 1M TPM free tier |
+| Transcription Model | `whisper-large-v3-turbo` | Fast 10s chunk audio transcription |
+| Auto-refresh interval | 30s | Accumulates 10s chunks; fires suggestions every 30s |
 | Recent chunks for suggestions | 3 | Raw chunks sent to suggestion prompt |
 
 ---

@@ -1,4 +1,44 @@
 import { Suggestion, ChatMessage, FactCheck, MeetingReport } from '@/types';
+import { isWhisperHallucination, hasSubstantiveSpeech } from '@/lib/utils';
+
+import {
+  fetchGeminiSuggestions,
+  streamGeminiChatResponse,
+  streamGeminiDetailedAnswer,
+  generateGeminiSummary,
+  generateGeminiMeetingReport,
+  geminiFactCheckSegment,
+} from '@/lib/gemini';
+
+ 
+// ─── Rate-Limit Resilient Fetch Helper ─────────────────────────────────────────
+
+async function groqFetch(
+  url: string,
+  options: RequestInit,
+  retries = 2
+): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, options);
+    if (response.status === 429 && attempt < retries) {
+      let waitMs = 2500 * (attempt + 1);
+      try {
+        const cloned = response.clone();
+        const text = await cloned.text();
+        const match = text.match(/try again in ([\d.]+)s/i);
+        if (match && match[1]) {
+          waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 400;
+        }
+      } catch {
+        /* ignore */
+      }
+      await new Promise((resolve) => setTimeout(resolve, Math.min(waitMs, 6000)));
+      continue;
+    }
+    return response;
+  }
+  return fetch(url, options);
+}
 
 // ─── Transcription ────────────────────────────────────────────────────────────
 
@@ -11,8 +51,10 @@ export async function transcribeAudio(
   formData.append('file', audioBlob, 'audio.webm');
   formData.append('model', model);
   formData.append('response_format', 'json');
+  formData.append('language', 'en');
+  formData.append('prompt', 'Live meeting conversation, team discussion, technical notes.');
 
-  const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+  const response = await groqFetch('https://api.groq.com/openai/v1/audio/transcriptions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}` },
     body: formData,
@@ -24,7 +66,14 @@ export async function transcribeAudio(
   }
 
   const data = await response.json();
-  return (data.text as string).trim();
+  const rawText = ((data.text as string) || '').trim();
+
+  // Guard against Whisper silence / low-volume hallucinations
+  if (isWhisperHallucination(rawText)) {
+    return '';
+  }
+
+  return rawText;
 }
 
 // ─── Rolling Summary ──────────────────────────────────────────────────────────
@@ -33,11 +82,17 @@ export async function generateSummary(
   transcriptText: string,
   summaryPrompt: string,
   apiKey: string,
-  model: string
+  model: string,
+  geminiApiKey?: string
 ): Promise<string> {
+  const activeGeminiKey = geminiApiKey || (model.startsWith('gemini-') ? apiKey : '');
+  if (activeGeminiKey || model.startsWith('gemini-')) {
+    return generateGeminiSummary(transcriptText, summaryPrompt, activeGeminiKey, model);
+  }
+
   const prompt = summaryPrompt.replace('{transcript}', transcriptText);
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -127,7 +182,7 @@ Return ONLY this JSON — no markdown, no prose, no explanation:
     `Analyze the transcript above and return exactly 3 cards (fact-check, question, insight) for the ${tier} tier. Follow all anti-hallucination rules strictly.`,
   ].join('\n');
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -171,19 +226,124 @@ Return ONLY this JSON — no markdown, no prose, no explanation:
 }
 
 
-/** Fetch all 3 tiers in parallel — call this on transcript changes */
+/** Fetch all 3 tiers in ONE consolidated API call — routes to Gemini Flash when active */
 export async function fetchAllTierSuggestions(
   recentChunks: string,
   summary: string,
-  systemPrompt: string,
+  _systemPrompt: string,
   apiKey: string,
-  model: string
+  model: string,
+  geminiApiKey?: string
 ): Promise<Record<SuggestionTier, { suggestions: Omit<Suggestion, 'id' | 'timestamp'>[]; latencyMs: number }>> {
+  if (!hasSubstantiveSpeech(recentChunks)) {
+    return {
+      HIGH: { suggestions: [], latencyMs: 0 },
+      MEDIUM: { suggestions: [], latencyMs: 0 },
+      INSIGHTS: { suggestions: [], latencyMs: 0 },
+    };
+  }
+
+  const activeGeminiKey = geminiApiKey || (model.startsWith('gemini-') ? apiKey : '');
+  if (activeGeminiKey || model.startsWith('gemini-')) {
+    return fetchGeminiSuggestions(recentChunks, summary, activeGeminiKey, model);
+  }
+
+  const startMs = Date.now();
+
+
+  const systemContent = `You are ConvoIQ, a real-time meeting intelligence assistant. Analyze the conversation and output intelligence cards for 3 tiers:
+
+1. HIGH (Immediate priority):
+   - fact-check: Correct a critical factual error/misstatement (or "No critical factual corrections needed.").
+   - question: Sharp immediate question exposing a key gap (or "No critical follow-up questions.").
+   - insight: Key takeaway shifting immediate direction (or "No urgent insight.").
+
+2. MEDIUM (Context & Strategy):
+   - fact-check: Factual nuance or definition worth clarifying.
+   - question: Strategic context/follow-up question.
+   - insight: Useful pattern or overlooked connection.
+
+3. INSIGHTS (Dynamics & Structure):
+   - fact-check: Logical contradiction or terminology shift.
+   - question: Meta question on team alignment or implicit assumptions.
+   - insight: Structural observation or conversational dynamics.
+
+STRICT TOPIC RELEVANCE: Every card must directly relate to the actual topic discussed. NEVER hijack isolated words into unrelated specialized fields (like control theory, calculus, or physics). If the speech is ambiguous, fragmented, or lacks a clear discussion topic, return empty arrays for all tiers.
+Return ONLY JSON with this format:
+{
+  "HIGH": [
+    { "type": "fact-check", "preview": "...", "detailsHint": "..." },
+    { "type": "question", "preview": "...", "detailsHint": "..." },
+    { "type": "insight", "preview": "...", "detailsHint": "..." }
+  ],
+  "MEDIUM": [
+    { "type": "fact-check", "preview": "...", "detailsHint": "..." },
+    { "type": "question", "preview": "...", "detailsHint": "..." },
+    { "type": "insight", "preview": "...", "detailsHint": "..." }
+  ],
+  "INSIGHTS": [
+    { "type": "fact-check", "preview": "...", "detailsHint": "..." },
+    { "type": "question", "preview": "...", "detailsHint": "..." },
+    { "type": "insight", "preview": "...", "detailsHint": "..." }
+  ]
+}`;
+
+  const userContent = [
+    summary ? `<summary>${summary.slice(0, 600)}</summary>` : '<summary>None</summary>',
+    `<recent_transcript>${recentChunks.slice(0, 1200)}</recent_transcript>`,
+  ].join('\n');
+
+  const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: systemContent },
+        { role: 'user', content: userContent },
+      ],
+      temperature: 0.3,
+      max_tokens: 1000,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Suggestions failed (${response.status}): ${err}`);
+  }
+
+  const data = await response.json();
+  const latencyMs = Date.now() - startMs;
+  let parsed: Record<string, Array<{ type?: string; preview?: string; detailsHint?: string }>> = {};
+  try {
+    parsed = JSON.parse(data.choices[0].message.content as string);
+  } catch {
+    /* fallback to empty */
+  }
+
+  const VALID_TYPES: Suggestion['type'][] = ['fact-check', 'question', 'insight'];
   const tiers: SuggestionTier[] = ['HIGH', 'MEDIUM', 'INSIGHTS'];
-  const results = await Promise.all(
-    tiers.map(tier => fetchSuggestions(recentChunks, summary, systemPrompt, apiKey, model, tier))
-  );
-  return Object.fromEntries(tiers.map((t, i) => [t, results[i]])) as Record<SuggestionTier, { suggestions: Omit<Suggestion, 'id' | 'timestamp'>[]; latencyMs: number }>;
+
+  const out = {} as Record<SuggestionTier, { suggestions: Omit<Suggestion, 'id' | 'timestamp'>[]; latencyMs: number }>;
+
+  for (const tier of tiers) {
+    const rawList = parsed[tier] || [];
+    const validated = VALID_TYPES.map((expectedType) => {
+      const found = rawList.find((s) => s.type === expectedType);
+      return {
+        type: expectedType,
+        preview: found?.preview?.trim() || `No ${expectedType} for this segment.`,
+        detailsHint: found?.detailsHint?.trim() || 'Nothing to expand on for this segment.',
+      };
+    });
+    out[tier] = { suggestions: validated, latencyMs };
+  }
+
+  return out;
 }
 
 // ─── Chat (streaming) ─────────────────────────────────────────────────────────
@@ -197,8 +357,24 @@ export async function streamChatResponse(
   apiKey: string,
   model: string,
   onToken: (token: string) => void,
-  onDone: (latencyMs: number) => void
+  onDone: (latencyMs: number) => void,
+  geminiApiKey?: string
 ): Promise<void> {
+  const activeGeminiKey = geminiApiKey || (model.startsWith('gemini-') ? apiKey : '');
+  if (activeGeminiKey || model.startsWith('gemini-')) {
+    return streamGeminiChatResponse(
+      userMessage,
+      recentTranscript,
+      summary,
+      chatHistory,
+      systemPrompt,
+      activeGeminiKey,
+      model,
+      onToken,
+      onDone
+    );
+  }
+
   const startMs = Date.now();
   let firstTokenMs: number | null = null;
 
@@ -218,7 +394,7 @@ export async function streamChatResponse(
     { role: 'user' as const, content: userMessage },
   ];
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -282,7 +458,7 @@ export async function generateFollowUpQuestions(
     .replace('{summary}', summary || 'No prior summary.');
 
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -318,8 +494,23 @@ export async function streamDetailedAnswer(
   apiKey: string,
   model: string,
   onToken: (token: string) => void,
-  onDone: (latencyMs: number) => void
+  onDone: (latencyMs: number) => void,
+  geminiApiKey?: string
 ): Promise<void> {
+  const activeGeminiKey = geminiApiKey || (model.startsWith('gemini-') ? apiKey : '');
+  if (activeGeminiKey || model.startsWith('gemini-')) {
+    return streamGeminiDetailedAnswer(
+      suggestion,
+      recentTranscript,
+      summary,
+      detailedAnswerPrompt,
+      activeGeminiKey,
+      model,
+      onToken,
+      onDone
+    );
+  }
+
   const startMs = Date.now();
   let firstTokenMs: number | null = null;
 
@@ -329,7 +520,7 @@ export async function streamDetailedAnswer(
     .replace('{summary}', summary || 'No prior summary.')
     .replace('{recentTranscript}', recentTranscript);
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -385,12 +576,18 @@ export async function factCheckSegment(
   text: string,
   prompt: string,
   apiKey: string,
-  model: string
+  model: string,
+  geminiApiKey?: string
 ): Promise<FactCheck[]> {
+  const activeGeminiKey = geminiApiKey || (model.startsWith('gemini-') ? apiKey : '');
+  if (activeGeminiKey || model.startsWith('gemini-')) {
+    return geminiFactCheckSegment(text, prompt, activeGeminiKey, model);
+  }
+
   const filledPrompt = prompt.replace('{text}', text);
 
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -422,11 +619,17 @@ export async function generateMeetingReport(
   fullTranscript: string,
   prompt: string,
   apiKey: string,
-  model: string
+  model: string,
+  geminiApiKey?: string
 ): Promise<MeetingReport> {
+  const activeGeminiKey = geminiApiKey || (model.startsWith('gemini-') ? apiKey : '');
+  if (activeGeminiKey || model.startsWith('gemini-')) {
+    return generateGeminiMeetingReport(fullTranscript, prompt, activeGeminiKey, model);
+  }
+
   const filledPrompt = prompt.replace('{transcript}', fullTranscript);
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await groqFetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

@@ -23,7 +23,8 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
   // Draft is initialised from current settings when the modal mounts (i.e. when it opens).
   // No useEffect sync needed because the inner component is unmounted/remounted on each open.
   const [draft, setDraft] = useState<SessionSettings>(settings);
-  const [showKey, setShowKey] = useState(false);
+  const [showGroqKey, setShowGroqKey] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'prompts'>('general');
 
@@ -77,22 +78,42 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
 
           {activeTab === 'general' && (
             <>
-              {/* API Key */}
-              <Section title="Groq API Key">
+              {/* Gemini API Key */}
+              <Section title="Gemini API Key (LLM Copilot — 1M TPM Free)">
+                <div className={styles.keyRow}>
+                  <input
+                    id="settings-gemini-key"
+                    className={styles.input}
+                    type={showGeminiKey ? 'text' : 'password'}
+                    value={draft.geminiApiKey || ''}
+                    onChange={(e) => set('geminiApiKey', e.target.value)}
+                    placeholder="AIzaSy..."
+                  />
+                  <button className={styles.eyeBtn} onClick={() => setShowGeminiKey(!showGeminiKey)} aria-label="Toggle visibility">
+                    {showGeminiKey ? '🙈' : '👁'}
+                  </button>
+                </div>
+                <p className={styles.hint}>
+                  ⭐ <strong>Recommended:</strong> Powers Gemini 2.5 Flash suggestions, chat, and reports with <strong>1,000,000 TPM</strong> (zero 429 rate limits). Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className={styles.link}>aistudio.google.com/apikey</a>
+                </p>
+              </Section>
+
+              {/* Groq API Key */}
+              <Section title="Groq API Key (Audio Transcription)">
                 <div className={styles.keyRow}>
                   <input
                     id="settings-api-key"
                     className={styles.input}
-                    type={showKey ? 'text' : 'password'}
+                    type={showGroqKey ? 'text' : 'password'}
                     value={draft.groqApiKey}
                     onChange={(e) => set('groqApiKey', e.target.value)}
                     placeholder="gsk_..."
                   />
-                  <button className={styles.eyeBtn} onClick={() => setShowKey(!showKey)} aria-label="Toggle visibility">
-                    {showKey ? '🙈' : '👁'}
+                  <button className={styles.eyeBtn} onClick={() => setShowGroqKey(!showGroqKey)} aria-label="Toggle visibility">
+                    {showGroqKey ? '🙈' : '👁'}
                   </button>
                 </div>
-                <p className={styles.hint}>Stored in your browser only — never sent to our servers. Get one at <a href="https://console.groq.com" target="_blank" rel="noopener noreferrer" className={styles.link}>console.groq.com</a></p>
+                <p className={styles.hint}>Powers Whisper Large V3 Turbo for ultra-fast 10s audio chunks. Get one at <a href="https://console.groq.com" target="_blank" rel="noopener noreferrer" className={styles.link}>console.groq.com</a></p>
               </Section>
 
               {/* Model Selection */}

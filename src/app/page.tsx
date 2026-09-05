@@ -86,7 +86,7 @@ export default function Home() {
   /* ── Settings modal ───────────────────────────────────────────────────── */
   const [settingsManuallyOpen, setSettingsManuallyOpen] = useState(false);
   const [settingsDismissed,    setSettingsDismissed]    = useState(false);
-  const settingsOpen  = settingsManuallyOpen || (!settings.groqApiKey && !settingsDismissed);
+  const settingsOpen  = settingsManuallyOpen || ((!settings.groqApiKey || !settings.geminiApiKey) && !settingsDismissed);
   const closeSettings = useCallback(() => { setSettingsManuallyOpen(false); setSettingsDismissed(true); }, []);
   const openSettings  = useCallback(() => { setSettingsDismissed(false); setSettingsManuallyOpen(true); }, []);
 
@@ -239,7 +239,13 @@ export default function Home() {
     if (currentClientId && lastSnapshot) {
       try {
         const txt = segments.map(s => s.text).join('\n');
-        const report = await generateMeetingReport(txt, settings.reportPrompt, settings.groqApiKey, settings.llmModel);
+        const report = await generateMeetingReport(
+          txt,
+          settings.reportPrompt,
+          settings.groqApiKey,
+          settings.llmModel,
+          settings.geminiApiKey
+        );
         await saveMeetingData(txt, summary, report);
       } catch (err) { console.error('Save meeting:', err); }
     }
@@ -270,7 +276,13 @@ export default function Home() {
       lastFactCheckedId.current = seg.id;
       (async () => {
         try {
-          const checks = await factCheckSegment(seg.text, settings.factCheckPrompt, settings.groqApiKey, settings.llmModel);
+          const checks = await factCheckSegment(
+            seg.text,
+            settings.factCheckPrompt,
+            settings.groqApiKey,
+            settings.llmModel,
+            settings.geminiApiKey
+          );
           if (checks.length > 0) updateSegment(seg.id, { factChecks: checks });
         } catch (err) { console.error('Fact-check:', err); }
       })();
